@@ -1,0 +1,30 @@
+Options: --badrand=_ --include=Militia --no-attack-react=_ --seed=100 --why=_
+From Adventures
+   Page (<why?general>)
+From Adventures-Traveller-page
+   Champion (<why?cards:Page needs it>)
+   Hero (<why?cards:Page needs it>)
+   Treasure Hunter (<why?cards:Page needs it>)
+   Warrior (<why?cards:Page needs it>)
+From DarkAges
+   Bandit Camp (<why?general>)
+   Poor House (<why?general>)
+   Storeroom (<why?general>)
+From Dominion-core
+   Militia (<why?--included>)
+   Moneylender (<why?general>)
+   Smithy (<why?general>)
+From Dominion-v1
+   Feast (<why?general>)
+From Intrigue-core
+   Minion (<why?general>)
+From Seaside
+   Ghost Ship (<why?general>)
+From base
+   Copper
+   Curse
+   Duchy
+   Estate
+   Gold
+   Province
+   Silver

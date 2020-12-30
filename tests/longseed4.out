@@ -1,0 +1,21 @@
+Options: --badrand=_ --groups=Dominion-core,Dominion-v2 --seed=1606807888
+From Dominion-core
+   Bureaucrat
+   Cellar
+   Council Room
+   Gardens
+   Laboratory
+   Library
+   Mine
+   Moneylender
+From Dominion-v2
+   Artisan
+   Vassal
+From base
+   Copper
+   Curse
+   Duchy
+   Estate
+   Gold
+   Province
+   Silver

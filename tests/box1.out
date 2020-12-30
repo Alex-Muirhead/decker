@@ -1,0 +1,33 @@
+Options: --badrand=_ --boxes=Adventures --boxfile=boxes.dat --seed=3
+From Adventures
+   Amulet
+   Artificer
+   Distant Lands
+   Dungeon
+   Duplicate
+   Guide
+   Page
+   Peasant
+   Port
+   Royal Carriage
+From Adventures-Traveller-page
+   Champion
+   Hero
+   Treasure Hunter
+   Warrior
+From Adventures-Traveller-peasant
+   Disciple
+   Fugitive
+   Soldier
+   Teacher
+From base
+   Copper
+   Curse
+   Duchy
+   Estate
+   Gold
+   Province
+   Silver
+Need the following items:
+   +cardtoken
+   tavernmat

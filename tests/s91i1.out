@@ -1,0 +1,38 @@
+Options: --badrand=_ --include=Tournament --seed=91 --why=_
+From Cornucopia
+   Horn of Plenty (<why?general>)
+   Horse Traders (<why?counterAttack>)
+   Tournament (<why?--included>)
+   Young Witch (<why?general>)
+From Cornucopia-prizes
+   Prizes (<why?cards:Tournament needs it>)
+From DarkAges
+   Ironmonger (<why?general>)
+From DarkAges-base
+   Hovel (<why?had enough DarkAges cards>, Replaces Estate in starting deck)
+   Necropolis (<why?had enough DarkAges cards>, Replaces Estate in starting deck)
+   Overgrown Estate (<why?had enough DarkAges cards>, Replaces Estate in starting deck)
+From Dominion-core
+   Cellar (Bane, <why:bane>)
+From Empires
+   Castles (<why?cost-target:Farmland>)
+From Guilds
+   Herald (<why?general>)
+From Hinterlands
+   Farmland (<why?counterCurser>)
+From Nocturne
+   Raider (<why?general>)
+From Prosperity-base
+   Colony (<why?cost-target:Farmland>)
+From Seaside
+   Ghost Ship (<why?general>)
+From base
+   Copper
+   Curse
+   Duchy
+   Estate
+   Gold
+   Province
+   Silver
+Need the following items:
+   points(shield) tokens

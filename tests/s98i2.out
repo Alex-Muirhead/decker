@@ -1,0 +1,33 @@
+Options: --badrand=_ --include=Feast,Market --seed=98 --why=_
+From Adventures
+   Wine Merchant (<why?general>)
+From DarkAges
+   Feodum (<why?general>)
+   Hermit (<why?general>)
+   Madman (<why?card:Hermit interacts with it>)
+   Poor House (<why?cost-target:Hermit>)
+From Dominion-core
+   Market (<why?--included>)
+From Dominion-v1
+   Feast (<why?--included>)
+From Empires
+   Royal Blacksmith (<why?general>)
+From Intrigue-core
+   Minion (<why?general>)
+From Menagerie
+   Sanctuary (<why?general>)
+From Renaissance
+   Treasure Chest+Swashbuckler (<why?general>)
+From base
+   Copper
+   Curse
+   Duchy
+   Estate
+   Gold
+   Province
+   Silver
+Need the following items:
+   coffers/villagers mat
+   coin tokens
+   debt tokens
+   tavernmat

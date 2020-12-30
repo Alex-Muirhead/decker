@@ -1,0 +1,19 @@
+#Mappings from "boxes" to groups
+#Note the ; for separators
+Adventures=Adventures;Adventures-Traveller-page;Adventures-Traveller-peasant;Adventures-Events
+Alchemy=Alchemy-base;Alchemy
+Cornucopia=Cornucopia;Cornucopia-prizes
+DarkAges=DarkAges;DarkAges-base
+Dominion1=Dominion-core;Dominion-v1
+Dominion2=Dominion-core;Dominion-v2
+Dominion=Dominion-core;Dominion-v1;Dominion-v2
+Empires=Empires;Empires-Events;Empires-Landmarks
+Guilds=Guilds
+Hinterlands=Hinterlands
+Intrigue1=Intrigue-core;Intrigue-v1
+Intrigue2=Intrigue-core;Intrigue-v2
+Intrigue=Intrigue-core;Intrigue-v1;Intrigue-v2
+Nocturne=Nocturne;Nocturne-Boons;Nocturne-Heirlooms;Nocturne-Hexes;Nocturne-non-supply;Nocturne-Spirits;Nocturne-States;Nocturne-Zombies
+Prosperity=Prosperity-base;Prosperity
+Renaissance=Renaissance;Renaissance-Projects
+Seaside=Seaside

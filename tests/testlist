@@ -1,0 +1,27 @@
+# expectedout|expectederr|arg1|arg2|arg3...
+help.out||--help
+|unkn.err|--bad-rand
+#These may need to be regenerated if more sets added
+s54.out|empty.err|--seed=54|--badrand
+s3401.out|empty.err|--seed=3401|--badrand|--why
+s13104.out|empty.err|--why|--badrand|--seed=13104
+s55055.out|empty.err|--seed=55055|--info|--badrand
+|validate.err|--groups=Adventures
+s3adv.out|empty.err|--badrand|--seed=3|--groups=Adventures,Adventures-Traveller-page,Adventures-Traveller-peasant
+s6mp2.out|empty.err|--badrand|--seed=6|--max-prefixes=2
+s6mp1.out|empty.err|--badrand|--seed=6|--max-prefixes=1
+s6mp3.out|empty.err|--badrand|--seed=6|--max-prefixes=3
+s91i1.out|empty.err|--seed=91|--badrand|--include=Tournament|--why
+s98i2.out|empty.err|--seed=98|--badrand|--include=Feast|--why|--include=Market
+s91x1.out|empty.err|--seed=91|--badrand|--include=Tournament|--why|--exclude=Young Witch
+longseed1.out|empty.err|--groups=Empires|--badrand|--seed=1606807888
+longseed2.out|empty.err|--groups=Guilds|--badrand|--seed=1606807888
+longseed3.out|empty.err|--groups=Dominion-core|--badrand|--seed=1606807888
+longseed4.out|empty.err|--groups=Dominion-core|--badrand|--groups=Dominion-v2|--seed=1606807888
+s12345l5.out|empty.err|--badrand|--landscape-count=5|--seed=12345
+s1002r2.out|empty.err|--seed=1002|--info|--max-cost-repeat=2|--badrand
+s100na.out|empty.err|--seed=100|--why|--include=Militia|--no-attack-react|--badrand
+s100nc.out|empty.err|--seed=100|--why|--include=Witch|--no-anti-cursor|--badrand
+box1.out|empty.err|--seed=3|--boxes=Adventures|--boxfile=boxes.dat|--badrand
+box2.out|empty.err|--seed=3|--boxes=Prosperity,Guilds|--boxfile=boxes.dat|--badrand
+box3.out|empty.err|--why|--seed=3|--boxes=Prosperity,Guilds|--boxfile=boxes.dat|--badrand

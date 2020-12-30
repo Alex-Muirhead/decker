@@ -1,0 +1,34 @@
+Options: --badrand=_ --exclude=Young Witch --include=Tournament --seed=91 --why=_
+From Adventures
+   Coin of the Realm (<why?general>)
+   Treasure Trove (<why?general>)
+From Cornucopia
+   Tournament (<why?--included>)
+From Cornucopia-prizes
+   Prizes (<why?cards:Tournament needs it>)
+From DarkAges
+   Beggar (<why?counterAttack>)
+   Ironmonger (<why?general>)
+   Scavenger (<why?general>)
+From DarkAges-base
+   Hovel (<why?had enough DarkAges cards>, Replaces Estate in starting deck)
+   Necropolis (<why?had enough DarkAges cards>, Replaces Estate in starting deck)
+   Overgrown Estate (<why?had enough DarkAges cards>, Replaces Estate in starting deck)
+From Empires
+   Castles (<why?general>)
+   Catapult+Rocks (<why?counterCurser>)
+From Hinterlands
+   Embasssy (<why?general>)
+From Menagerie
+   Cardinal (<why?general>)
+From base
+   Copper
+   Curse
+   Duchy
+   Estate
+   Gold
+   Province
+   Silver
+Need the following items:
+   points(shield) tokens
+   tavernmat

@@ -1,0 +1,27 @@
+Options: --badrand=_ --info=_ --max-cost-repeat=2 --seed=1002
+From Adventures
+   Artificer   types=Action costs={(5,,)}
+From Alchemy
+   Apprentice  types=Action costs={(5,,)}
+   Herbalist   types=Action costs={(2,,)}
+From DarkAges
+   Beggar      types=Action, Reaction costs={(2,,)}
+   Death Cart  types=Action, Looter costs={(4,,)}
+   Junk Dealer types=Action costs={(5,,)}
+From Dominion-core
+   Laboratory  types=Action costs={(5,,)}
+From Guilds
+   Doctor      types=Action costs={(3,,)}
+   Herald      types=Action costs={(4,,)}
+From Nocturne
+   Pooka       types=Action costs={(5,,)}
+From Nocturne-Heirlooms
+   Cursed Gold (Replaces one Copper in starting deck) types=Heirloom, Treasure costs={(4,,)}
+From base
+   Copper      types=Treasure costs={(0,,)}
+   Curse       types=Curse costs={(0,,)}
+   Duchy       types=Victory costs={(5,,)}
+   Estate      types=Victory costs={(2,,)}
+   Gold        types=Treasure costs={(6,,)}
+   Province    types=Victory costs={(8,,)}
+   Silver      types=Treasure costs={(3,,)}

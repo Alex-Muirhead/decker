@@ -1,0 +1,23 @@
+decker [options]
+  --badrand  Use bad (but cross platform) random number generator
+  --boxes  Which boxes to include in the collection.
+  --boxfile  Filename listing boxes and which groups they contain
+  --cardfile  Filename listing all cards.
+  --exclude  Do not allow any of these cards.
+  --groups  Which groups to include in the collection.
+  --help  List command options.
+  --include  This card must be in the selection.
+  --info  Show info about selected cards.
+  --landscape-count  How many landscape cards to include (does not include artefacts etc).
+  --list  Dump contents of collection and exit.
+  --max-cost-repeat  Set the maximum number of times a cost can occur.
+  --max-prefixes  Most prefixes (groups and related groups) which can be included. Eg: Cornucopia would also allow Cornucopia-prizes.
+  --max-type  eg --max-type=Treasure:5 means that the selection will can contain at most 5 treasures.
+  --min-type  eg --min-type=Treasure:5 means that the selection will can contain at least 5 treasures.
+  --no-anti-cursor  Disable automatic adding of trash cards if cards give curses.
+  --no-attack-react  Disable automatic adding reacts to attacks.
+  --no-validate  Do not validate collection.
+  --seed  Seed for random number generator. 0 will use a default value.
+  --why  Explain why cards were added.
+
+Arguments which take further input are of the form --opt=a,b,c

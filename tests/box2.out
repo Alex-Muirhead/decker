@@ -1,0 +1,27 @@
+Options: --badrand=_ --boxes=Prosperity,Guilds --boxfile=boxes.dat --seed=3
+From Guilds
+   Candlestick Maker
+   Doctor
+   Herald
+   Masterpiece
+From Prosperity
+   Counting House
+   Grand Market
+   Hoard
+   Mint
+   Rabble
+   Vault
+From Prosperity-base
+   Colony
+   Platinum
+From base
+   Copper
+   Curse
+   Duchy
+   Estate
+   Gold
+   Province
+   Silver
+Need the following items:
+   coffers/villagers mat
+   coin tokens
