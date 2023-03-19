@@ -37,10 +37,8 @@ namespace decker
 {
     
 // MarketCap is how many kingdom cards should be in the supply
-// uncheckedCount is how many piles should be added completely unchecked (no
-//  attempt to find cards which interact with them
 Selection::Selection(const CardCollection* coll, PileIt generalBegin, 
-    PileIt generalEnd, short marketCap, short uncheckedCount)
+    PileIt generalEnd, short marketCap)
     :constraints(new std::vector<const Constraint*>(), cleanup()),
     requiredCards(marketCap),
     currentNormalPileCount(0),beginGeneral(generalBegin), 

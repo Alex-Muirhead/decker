@@ -25,7 +25,7 @@ public:
     bool meets(const Pile* c) const override;
     bool operator==(const Property& other) const override; 
 protected:
-    size_t calcHash() const;
+    size_t calcHash() const override;
     bool typesEqual(const TypeProperty& other) const;
 private:
     const std::string type;
@@ -43,7 +43,7 @@ public:
     ~KeywordProperty(){};
     bool operator==(const Property& other) const override;
 protected:
-    size_t calcHash() const;
+    size_t calcHash() const override;
 private:
     const std::string keyword;
     bool kingdomAndSupply;
@@ -56,10 +56,10 @@ class KeywordInteractionProperty : public Property
 public:
     KeywordInteractionProperty(const std::string& interactsKeyword);
     virtual ~KeywordInteractionProperty(){};
-    virtual bool meets(Pile* c);    
-    virtual bool operator==(const Property& other) const =0; // to use functions as keys    
+    virtual bool meets(const Pile* c) const override;    
+    virtual bool operator==(const Property& other) const override =0; // to use functions as keys    
 protected:
-    size_t calcHash() const;
+    size_t calcHash() const override;
 private:
     const std::string keyword;
 };
@@ -82,7 +82,7 @@ public:
     
     bool operator==(const Property& other) const  override;
 protected:    
-    size_t calcHash() const;    
+    size_t calcHash() const override;    
     bool costsEqual(const CostProperty& other) const;
 private:
     Cost singleCost;
@@ -102,7 +102,7 @@ public:
     bool meets(const Pile* c) const override;      
     virtual bool operator==(const Property& other) const override;   
 protected:    
-    size_t calcHash() const;    
+    size_t calcHash() const override;    
 };
 
 // For normal purchasable cards
@@ -207,7 +207,7 @@ class MissingPotionProperty : public Property
 public:
     MissingPotionProperty(){};
     virtual ~MissingPotionProperty(){}
-    virtual bool meets(const Pile* c) const {return false;};  
+    virtual bool meets(const Pile* c) const override {return false;};  
     virtual bool meets(const Selection* p) const override;    
     virtual bool operator==(const Property& other) const override;
     virtual bool isSelectionProperty() const override {return true;}    
@@ -222,7 +222,7 @@ class MissingInteractingCardProperty : public Property
 public:
     MissingInteractingCardProperty(){};
     virtual ~MissingInteractingCardProperty(){}
-    virtual bool meets(const Pile* c) const {return false;};  
+    virtual bool meets(const Pile* c) const override {return false;};  
     virtual bool meets(const Selection* p) const override;    
     virtual bool operator==(const Property& other) const override;
     virtual bool isSelectionProperty() const override {return true;}    
@@ -336,6 +336,31 @@ protected:
 private:
     const std::string type;
     const std::string note;
+};
+
+/* Decide if prosperity cards needs to be added.
+ * Triggers if:   (Colony and Province are not both present)
+ *              && (there are >= "threshold" prosperity cards
+ *                   or only one of Colony or Province is present).
+*/ 
+class NeedProsperity : public Property
+{
+public:
+    NeedProsperity(const CardCollection& col, ushort thr):threshold(thr),
+plat(col.getPileForCard("Platinum")),
+col(col.getPileForCard("Colony")) {}
+
+    virtual ~NeedProsperity(){}
+    virtual bool meets(const Pile* c) const override {return false;}
+    virtual bool meets(const Selection* p) const override;
+    virtual bool operator==(const Property& other) const override;
+    virtual bool isSelectionProperty() const override {return true;}
+protected:
+    size_t calcHash() const override;
+private:
+    ushort threshold;
+    const Pile* plat;    
+    const Pile* col;
 };
 
 

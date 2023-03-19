@@ -22,6 +22,7 @@ RepeatedCostProperty = 75
 HangingInteractsWith = 80
 EitherProperty = 85
 MissingGroupForKeywordProperty = 90
+NeedProsperity = 95
 
 The gaps are to allow the range of values to include whether 
 there are supply and kingdom limitations
@@ -86,7 +87,7 @@ size_t KeywordProperty::calcHash() const
     return (hash<std::string>()(keyword)/TYPEWIDTH)*TYPEWIDTH+5+kingdomAndSupply;
 }
 
-bool KeywordInteractionProperty::meets(Pile* p)
+bool KeywordInteractionProperty::meets(const Pile* p) const
 {
     return find(p->getKWInteractions().begin(), p->getKWInteractions().end(), keyword)!=p->getKWInteractions().end();
 }
@@ -578,6 +579,52 @@ size_t MissingGroupForKeywordProperty::calcHash() const
 }
 
 
+
+bool NeedProsperity::meets(const Selection* p) const
+{
+    // If we didn't find the piles at all something
+    // went wrong
+    if (!col || !plat)
+    {
+        return false;
+    }
+    bool hasCol = p->contains(col);
+    bool hasPlat = p->contains(plat);
+    if (hasCol && hasPlat) 
+    {
+        return false;
+    }
+    if (hasCol != hasPlat)
+    {
+        return true;
+    }
+    // count how many prosperity cards we have
+    ushort total = 0;
+    for (auto pp : p->getPiles())
+    {
+        if (pp->getCardGroup().find("Prosperity") == 0)
+        {
+            total++;
+        }
+    }
+    return (threshold>0) && (threshold <= total);
+}
+
+
+bool NeedProsperity::operator==(const Property& other) const
+{
+    auto po = dynamic_cast<const NeedProsperity*>(&other);
+    if (po)
+    {
+        return po->threshold==threshold;
+    }
+    return false;
+}
+
+size_t NeedProsperity::calcHash() const
+{
+    return 95;
+}
 
 
 }

@@ -50,9 +50,15 @@ public:
     public:
     bool operator()(const Cost& c1, const Cost& c2) const
     {
-        return ((c1.components[1]<c2.components[1]) || 
-            (c1.components[2]<c2.components[2]) || 
-            (c1.components[0]<c2.components[0]));    
+        if (c1.components[1]!=c2.components[1])
+        {
+            return (c1.components[1]<c2.components[1]);
+        }
+        if (c1.components[2]!=c2.components[2])
+        {
+            return (c1.components[2]<c2.components[2]);
+        }
+        return (c1.components[0]<c2.components[0]);        
     }
     };       
     
@@ -236,7 +242,7 @@ using PropertyPtr=std::shared_ptr<const Property>;
 class Selection
 {
 public:
-    Selection(const CardCollection* coll, PileIt generalBegin, PileIt generalEnd, short marketCap=10, short uncheckedCount=0);
+    Selection(const CardCollection* coll, PileIt generalBegin, PileIt generalEnd, short marketCap=10);
     explicit Selection(const Selection& old);
     ~Selection();
     void addConstraint(Constraint* cons);
@@ -390,7 +396,6 @@ private:
         }
     };        
     
-    std::map<std::string, std::vector<std::string>> boxContents;
     std::set<const Card*> cards;   // need this for validating collection 
                                 //(borrowed pointers from Pile* held in "piles"
     std::set<std::string> groupNames; // need this for validating collection

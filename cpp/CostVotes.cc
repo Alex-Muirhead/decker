@@ -30,18 +30,11 @@ bool CostVotes::getMaxWeighted(CostSet& maxCost, float threshold, float toleranc
             max=v.second;
         }
     }
-        // ok now we sweep again and find all votes close to this
-    for (auto v : votes)
-    {
-        if (v.second > max)    // yes this check is not completely well defined
-        {                       // but "close to max" will do here
-            max=v.second;
-        }
-    }
     if (max < threshold)
     {
         return false;
     }
+        // ok now we sweep again and find all votes close to this    
     for (auto v : votes)
     {
         if ((max - v.second) <= tolerance)    // abs not needed since dealing with max

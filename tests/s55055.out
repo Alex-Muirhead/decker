@@ -1,38 +1,45 @@
 Options: --badrand=_ --info=_ --seed=55055
 From Adventures-Events
-   Quest          types=Event costs={(0,,)}
+   Quest            types=Event costs={(0,,)}
 From DarkAges
-   Beggar         types=Action, Reaction costs={(2,,)}
+   Beggar           types=Action, Reaction costs={(2,,)}
+From DarkAges-base
+   Hovel (Replaces Estate in starting deck)            types=Reaction, Shelter costs={(1,,)}
+   Necropolis (Replaces Estate in starting deck)       types=Action, Shelter costs={(1,,)}
+   Overgrown Estate (Replaces Estate in starting deck) types=Shelter, Victory costs={(1,,)}
 From Dominion-v1
-   Spy            types=Action, Attack costs={(4,,)}
+   Spy              types=Action, Attack costs={(4,,)}
 From Empires
-   Castles        types=Action, Castle, Treasure, Victory costs={(3,,), (4,,), (5,,), (6,,), (7,,), (8,,), (9,,), (10,,)}
+   Castles          types=Action, Castle, Treasure, Victory costs={(3,,), (4,,), (5,,), (6,,), (7,,), (8,,), (9,,), (10,,)}
 From Empires-Landmarks
-   Defiled Shrine types=Landmark costs={(,,)}
+   Defiled Shrine   types=Landmark costs={(,,)}
 From Hinterlands
-   Oracle         types=Action, Attack costs={(3,,)}
+   Oracle           types=Action, Attack costs={(3,,)}
 From Intrigue-core
-   Courtyard      types=Action costs={(2,,)}
+   Courtyard        types=Action costs={(2,,)}
 From Menagerie
-   Hunting Lodge  types=Action costs={(5,,)}
+   Hunting Lodge    types=Action costs={(5,,)}
 From Nocturne
-   Secret Cave    types=Action, Duration costs={(3,,)}
+   Secret Cave      types=Action, Duration costs={(3,,)}
 From Nocturne-Heirlooms
-   Magic Lamp (Replaces one Copper in starting deck)     types=Heirloom, Treasure costs={(0,,)}
+   Magic Lamp (Replaces one Copper in starting deck)       types=Heirloom, Treasure costs={(0,,)}
 From Prosperity
-   Royal Seal     types=Treasure costs={(5,,)}
+   Royal Seal       types=Treasure costs={(5,,)}
+From Prosperity-base
+   Colony (AddProsperityCards)           types=Victory costs={(11,,)}
+   Platinum (AddProsperityCards)         types=Treasure costs={(9,,)}
 From Renaissance
-   Acting Troup   types=Action costs={(3,,)}
+   Acting Troup     types=Action costs={(3,,)}
 From Seaside
-   Salvager       types=Action costs={(4,,)}
+   Salvager         types=Action costs={(4,,)}
 From base
-   Copper         types=Treasure costs={(0,,)}
-   Curse          types=Curse costs={(0,,)}
-   Duchy          types=Victory costs={(5,,)}
-   Estate         types=Victory costs={(2,,)}
-   Gold           types=Treasure costs={(6,,)}
-   Province       types=Victory costs={(8,,)}
-   Silver         types=Treasure costs={(3,,)}
+   Copper           types=Treasure costs={(0,,)}
+   Curse            types=Curse costs={(0,,)}
+   Duchy            types=Victory costs={(5,,)}
+   Estate           types=Victory costs={(2,,)}
+   Gold             types=Treasure costs={(6,,)}
+   Province         types=Victory costs={(8,,)}
+   Silver           types=Treasure costs={(3,,)}
 Need the following items:
    coffers/villagers mat
    coin tokens

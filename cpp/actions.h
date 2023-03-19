@@ -49,6 +49,13 @@ public:
     bool apply(const std::string& why, const SelectionPtr& start, SelectionPtr& result, std::string& message) override;
 };
 
+class AddProsperity : public ConstraintAction
+{
+public:    
+    AddProsperity(const CardCollection* col);
+    ~AddProsperity(){}
+    bool apply(const std::string& why, const SelectionPtr& start, SelectionPtr& result, std::string& message) override;
+};
 
 
 }

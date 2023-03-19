@@ -293,6 +293,7 @@ bool CardCollection::buildSelection(const SelectionPtr& start, SelectionPtr& res
         status[it]=(*start->constraints)[it]->getStatus(start);
         if (status[it]==C_Fail)
         {
+            message="Constraint Fail";
             return false;
         }
     }       // we haven't "failed" constraints but do we still need action
@@ -329,7 +330,7 @@ bool CardCollection::buildSelection(const SelectionPtr& start, SelectionPtr& res
         const float haveCostPenalty=-3;
         
         const float threshold=0.5;
-        const float tolerance=0.2;
+        const float tolerance=0.21; // 0.2 was showing non-determinism
         
         bool needTargetAction=false;
         const CostSet& costs=start->getCostSet();
@@ -368,6 +369,8 @@ bool CardCollection::buildSelection(const SelectionPtr& start, SelectionPtr& res
                     {
                         newSel->setNeedToCheck(false, string());  
                     }
+                    // in case this gets overwritten in add
+                    string blame=newSel->getTargetString();
                     if (!newSel->addPile(next))
                     {
                         if (!needTargetAction)
@@ -383,7 +386,7 @@ bool CardCollection::buildSelection(const SelectionPtr& start, SelectionPtr& res
                         // need to work out how to give more useful feedback
                     ostringstream oss;
                     oss << "<why?cost-target:";
-                    oss << newSel->getTargetString();
+                    oss << blame;
                     oss << '>';
                     newSel->tagPile(next, oss.str());
                     SelectionPtr sp(newSel);                   

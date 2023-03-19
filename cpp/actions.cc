@@ -192,4 +192,38 @@ bool AddMissingDependencyGroup::apply(const std::string& why, const SelectionPtr
 }
 
 
+AddProsperity::AddProsperity(const CardCollection* col):ConstraintAction(col){}
+    
+bool AddProsperity::apply(const std::string& why, const SelectionPtr& start, SelectionPtr& result, std::string& message)
+{
+    const CardCollection* col = start->getCollection();
+    auto plat = col->getPileForCard("Platinum");
+    auto colony= col->getPileForCard("Colony");
+    if (!plat || !colony) 
+    {
+        message="Can't find prosperity base cards";
+        return false;
+    }
+    SelectionPtr res(start);
+    if (!res->contains(plat))
+    {
+        if (!res->addPile(plat))
+        {
+            message="Error adding Platinum";
+            return false;
+        }
+        res->tagPile(plat, why);
+    }
+    if (!res->contains(colony))
+    {
+        if (!res->addPile(colony))
+        {
+            message="Error adding Colony";
+            return false;
+        }
+        res->tagPile(colony, why);        
+    }
+    return collection->buildSelection(res, result, message);
+}
+
 }

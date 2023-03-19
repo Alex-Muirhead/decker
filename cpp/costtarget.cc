@@ -136,7 +136,7 @@ bool CostRelative::addVotes(const CostSet& currentCosts, CostVotes& votes) const
                 {
                     votes.addVote(target, weight+boost);
                 }
-                for (;target.getCoin()>0;target=target.getRelCost(-1))
+                for (unsigned short i=0;(i<costDelta) && (target.getCoin()>0); target=target.getRelCost(-1),++i)
                 {
                     votes.addVote(target, weight);
                 }
@@ -150,7 +150,7 @@ bool CostRelative::addVotes(const CostSet& currentCosts, CostVotes& votes) const
 bool CostRelative::operator==(const CostTarget& other) const
 {
     const CostRelative* obj=dynamic_cast<const CostRelative*>(&other);
-    return (obj!=0) && (obj->costDelta==costDelta); 
+    return (obj!=0) && (obj->costDelta==costDelta) && (obj->noLess == noLess);
 }
 
 

@@ -57,6 +57,7 @@ Constraint* baneConstraint(const CardCollection& coll)
     cs.insert(Cost(3));
     PropertyPtr baneCost=PropertyPtr(new CostAndTypeProperty("Action", cs));
     PileIt begin, end;
+    // TODO: Need to deal with this call failing
     coll.getIterators(PropertyPtr(baneCost), begin, end);
     ConstraintAction* fix=new FindBane(&coll, begin, end);
     PropertyPtr hasBane=PropertyPtr(new NoteProperty("hasBane"));

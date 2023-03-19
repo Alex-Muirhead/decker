@@ -834,6 +834,9 @@ std::vector<Constraint*> Config::buildConstraints(const CardCollection& coll, st
     Constraint* c=new Constraint("AddPotion", PropertyPtr(new MissingPotionProperty()), failProp, new AddGroup(&coll, "Alchemy-base"), 1, decker::MANY, decker::MANY, decker::MANY);
     cons.push_back(c);
     
+    c=new Constraint("AddProsperityCards", PropertyPtr(new NeedProsperity(coll, rand->get()%10)), failProp, new AddProsperity(&coll), 1, decker::MANY, decker::MANY, decker::MANY);
+    cons.push_back(c);
+    
     c=new Constraint("AddInteractingGroup", PropertyPtr(new MissingInteractingCardGroupProperty()), failProp, new AddMissingDependencyGroup(&coll), 1, decker::MANY, decker::MANY, decker::MANY);
     cons.push_back(c);
 

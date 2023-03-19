@@ -13,6 +13,7 @@ Hinterlands=Hinterlands
 Intrigue1=Intrigue-core;Intrigue-v1
 Intrigue2=Intrigue-core;Intrigue-v2
 Intrigue=Intrigue-core;Intrigue-v1;Intrigue-v2
+Menagerie=Menagerie;Menagerie-Events;Menagerie-Horse;Menagerie-ways
 Nocturne=Nocturne;Nocturne-Boons;Nocturne-Heirlooms;Nocturne-Hexes;Nocturne-non-supply;Nocturne-Spirits;Nocturne-States;Nocturne-Zombies
 Prosperity=Prosperity-base;Prosperity
 Renaissance=Renaissance;Renaissance-Projects

@@ -8,10 +8,6 @@ From Cornucopia-prizes
    Prizes (<why?cards:Tournament needs it>)
 From DarkAges
    Ironmonger (<why?general>)
-From DarkAges-base
-   Hovel (<why?had enough DarkAges cards>, Replaces Estate in starting deck)
-   Necropolis (<why?had enough DarkAges cards>, Replaces Estate in starting deck)
-   Overgrown Estate (<why?had enough DarkAges cards>, Replaces Estate in starting deck)
 From Dominion-core
    Cellar (Bane, <why:bane>)
 From Empires
@@ -24,6 +20,7 @@ From Nocturne
    Raider (<why?general>)
 From Prosperity-base
    Colony (<why?cost-target:Farmland>)
+   Platinum (AddProsperityCards)
 From Seaside
    Ghost Ship (<why?general>)
 From base

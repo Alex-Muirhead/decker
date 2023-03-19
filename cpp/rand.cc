@@ -9,7 +9,7 @@ class BadRand : public RandStream
 {
 public:
     BadRand(unsigned s, unsigned cap);
-    unsigned get();
+    unsigned get() override;
     unsigned initSeed() override
     {
         return init;
@@ -29,7 +29,7 @@ public:
         init=s;
         srand(s);
     };
-    unsigned get()
+    unsigned get() override
     {
         return rand();
     }
