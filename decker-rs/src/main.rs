@@ -8,7 +8,6 @@ use std::io::BufRead;
 use std::io::BufReader;
 use std::path::Path;
 
-
 use std::convert::TryFrom;
 
 use std::process::exit;
@@ -16,18 +15,18 @@ use std::rc::Rc;
 
 mod card;
 mod collection;
+mod constraint;
 mod cost;
 mod pile;
 mod property;
 mod selection;
-mod constraint;
 
 use card::*;
+use collection::*;
+use constraint::*;
 use cost::*;
 use pile::*;
-use collection::*;
 use property::*;
-use constraint::*;
 
 static MAXCOINCOST: i8 = 11;
 

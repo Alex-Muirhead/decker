@@ -56,6 +56,7 @@ impl Cost {
     }
 
     fn get_rel_cost(&self, delta: i8) -> Cost {
+        // .unwrap_or(-1) is an artifact of -1 being a sentinel value
         let mut new_coin = self.coin.unwrap_or(-1) + delta;
         if new_coin < 0 {
             new_coin = 0;

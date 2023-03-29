@@ -143,7 +143,6 @@ impl Pile {
 pub type PileSet = BTreeSet<PilePtr>;
 pub type Piles = Vec<PilePtr>;
 
-
 #[derive(Ord, Eq)]
 pub struct SortablePile {
     pub p: PilePtr,
