@@ -14,8 +14,8 @@ use crate::piles::PileSet;
 use crate::properties::prelude::*;
 
 use crate::{
-    bool_value, caps, capu, capus, group_name_prefix, organise_args, read_boxes, show_options,
-    split_once, unsigned_value, ushort_value, StringMultiMap, MANY,
+    bool_value, caps, capu, capus, group_name_prefix, organise_args, read_boxes, split_once,
+    unsigned_value, ushort_value, Cli, StringMultiMap, MANY,
 };
 
 fn get_legal_options() -> HashMap<String, String> {
@@ -372,6 +372,7 @@ impl Config {
 // less need to do reference params to get around multiple ret / error ret
 pub fn load_config(
     args: Vec<String>,
+    cli: Cli,
     card_file: String,
     box_file: String,
 ) -> Result<Config, String> {
@@ -382,12 +383,6 @@ pub fn load_config(
             return Err(s);
         }
         Ok(m) => m,
-    };
-    if m.contains_key("--help") {
-        show_options(&legal_options);
-        // This should not return a config but it isn't really an error
-        // I'll send back an empty string
-        return Err("".to_string()); // this is not correct but I need a marker
     };
     // build an exclusion list of cardnames to drop
     let mut exclude_names: HashMap<String, bool> = HashMap::new();

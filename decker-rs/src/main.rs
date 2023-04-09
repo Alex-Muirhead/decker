@@ -10,6 +10,8 @@ use std::convert::TryFrom;
 
 use std::process::exit;
 
+use clap::Parser;
+
 static MAXCOINCOST: i8 = 11;
 
 const MANY: u64 = 5000;
@@ -71,15 +73,6 @@ fn organise_args(
         }
     }
     Ok(m)
-}
-
-fn show_options(legal_options: &HashMap<String, String>) {
-    println!("decker [options]");
-    for (k, v) in legal_options {
-        println!("  {}  {}", k, v);
-    }
-    println!();
-    println!("Arguments which take further input are of the form --opt=a,b,c")
 }
 
 fn short_value(s: &str) -> i8 {
@@ -169,10 +162,91 @@ fn group_name_prefix(group_name: &str) -> String {
     }
 }
 
+#[derive(Parser)]
+pub struct Cli {
+    /// Seed for random number generator.
+    #[arg(long, default_value_t = 0)]
+    seed: u64,
+
+    /// Use bad (but cross platform) random number generator
+    #[arg(long)]
+    badrand: bool,
+
+    /// Which boxes to include in the collection.
+    #[arg(long)]
+    boxes: Vec<String>,
+
+    /// Which groups to include in the collection.
+    #[arg(long)]
+    groups: Vec<String>,
+
+    /// Filename listing boxes and which groups they contain
+    #[arg(long)]
+    boxfile: Option<String>,
+
+    /// Filename listing all cards.
+    #[arg(long)]
+    cardfile: Option<String>,
+
+    /// Dump contents of collection and exit.
+    #[arg(long)]
+    list: bool,
+
+    /// How many landscape cards to include (does not include artefacts etc).
+    #[arg(long, default_value_t = 0)]
+    landscape_count: u8,
+
+    /// Explain why cards were added.
+    #[arg(long)]
+    why: bool,
+
+    /// Do not validate collection.
+    #[arg(long)]
+    no_validate: bool,
+
+    /// Do not allow any of these cards.
+    #[arg(long, value_delimiter = ',')]
+    exclude: Vec<String>,
+
+    /// This card must be in the selection.
+    #[arg(long, value_delimiter = ',')]
+    include: Vec<String>,
+
+    /// Show info about selected cards.
+    #[arg(long)]
+    info: bool,
+
+    /// Disable automatic adding reacts to attacks.
+    #[arg(long)]
+    no_attack_react: bool,
+
+    /// Disable automatic adding of trash cards if cards give curses.
+    #[arg(long)]
+    no_anti_cursor: bool,
+
+    /// Set the maximum number of times a cost can occur.
+    #[arg(long, default_value_t = 0)]
+    max_cost_repeat: u8,
+
+    /// eg --min-type=Treasure:5 means that the selection will can contain at least 5 treasures."));
+    #[arg(long, value_delimiter = ',')]
+    min_type: Vec<String>,
+
+    /// eg --max-type=Treasure:5 means that the selection will can contain at most 5 treasures."));
+    #[arg(long, value_delimiter = ',')]
+    max_type: Vec<String>,
+
+    /// Most prefixes (groups and related groups) which can be included. Eg: Cornucopia would also allow Cornucopia-prizes.
+    #[arg(long, default_value_t = 0)]
+    max_prefixes: u8,
+}
+
 fn main() {
+    let cli = Cli::parse();
+
     let mut args: Vec<String> = env::args().collect();
     args.remove(0);
-    let mut conf = match load_config(args, "cards.dat".to_string(), "".to_string()) {
+    let mut conf = match load_config(args, cli, "cards.dat".to_string(), "".to_string()) {
         Ok(v) => v,
         Err(e) => {
             println!("{}", e);
