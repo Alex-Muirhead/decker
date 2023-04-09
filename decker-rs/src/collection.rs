@@ -4,14 +4,14 @@ use std::collections::{BTreeSet, HashMap, HashSet};
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use crate::{ConsResult::*, ConstraintPtr, PropertyPtr, RandStream};
+use crate::{ConsResult::*, RandStream, ConstraintPtr, PropertyPtr};
 
-use crate::card::*;
-use crate::constraint::*;
-use crate::cost::*;
 use crate::pile::*;
+use crate::card::*;
+use crate::cost::*;
 use crate::property::*;
 use crate::selection::*;
+use crate::constraint::*;
 
 #[derive(Clone)]
 pub struct CollectionIterator {

@@ -1,11 +1,11 @@
 use std::collections::BTreeMap;
 use std::rc::Rc;
 
-use crate::collection::*;
+use crate::MANY;
 use crate::cost::*;
+use crate::collection::*;
 use crate::property::*;
 use crate::selection::SelectionPtr;
-use crate::MANY;
 
 pub fn bane_constraint(col: &CardCollectionPtr) -> ConstraintPtr {
     let has_yw = NameProperty::make_ptr(&"Young Witch".to_string());
@@ -96,6 +96,7 @@ pub fn attack_react_constraint(col: &CardCollectionPtr, threshold: u64) -> Optio
         MANY,
     ))
 }
+
 
 trait ConstraintAction {
     // send back a selection or an error message

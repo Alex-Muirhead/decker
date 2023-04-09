@@ -1,14 +1,14 @@
 use std::borrow::Borrow;
 
-use std::cell::RefCell;
 use std::collections::{BTreeMap, BTreeSet};
 use std::rc::Rc;
+use std::cell::RefCell;
 
+use crate::pile::*;
 use crate::card::*;
+use crate::cost::*;
 use crate::collection::*;
 use crate::constraint::*;
-use crate::cost::*;
-use crate::pile::*;
 
 pub struct SelectionState {
     piles: Piles,
