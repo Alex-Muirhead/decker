@@ -31,6 +31,14 @@ static MAXCOINCOST: i8 = 11;
 
 const MANY: u64 = 5000;
 
+mod actions;
+mod cards;
+mod config;
+mod constraints;
+mod costs;
+mod piles;
+mod properties;
+
 fn get_legal_options() -> HashMap<String, String> {
     let mut res: HashMap<String, String> = HashMap::new();
     res.insert(
