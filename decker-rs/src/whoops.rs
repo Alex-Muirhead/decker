@@ -29,7 +29,14 @@ use std::rc::Rc;
 
 static MAXCOINCOST: i8 = 11;
 
-const MANY: u64 = 5000;
+// Just in case I need to go to 16 (Don't know why I would need that)
+type Short = i8;
+type UShort = u8;
+
+// so we aren't depending on usize
+type Unsigned = u64;
+
+const MANY: Unsigned = 5000;
 
 fn get_legal_options() -> HashMap<String, String> {
     let mut res: HashMap<String, String> = HashMap::new();
@@ -113,9 +120,9 @@ fn get_legal_options() -> HashMap<String, String> {
 //  and then make callers check if they exist
 #[derive(Hash, Eq, PartialEq, Copy, Clone, Debug)]
 pub struct Cost {
-    coin: i8,
-    potion: i8,
-    debt: i8,
+    coin: Short,
+    potion: Short,
+    debt: Short,
 }
 
 type CostSet = HashSet<Cost>;
@@ -197,11 +204,11 @@ impl Cost {
     }
 
     // if we were really rusting this maybe this should be an Option
-    fn get_coin(&self) -> i8 {
+    fn get_coin(&self) -> Short {
         self.coin
     }
 
-    fn get_rel_cost(&self, delta: i8) -> Cost {
+    fn get_rel_cost(&self, delta: Short) -> Cost {
         let mut new_coin = self.coin + delta;
         if new_coin < 0 {
             new_coin = 0;
@@ -214,10 +221,7 @@ impl Cost {
     }
 
     fn intersects(cs1: &CostSet, cs2: &CostSet) -> bool {
-        if cs1.intersection(cs2).next().is_some() {
-            return true;
-        }
-        false
+        cs1.intersection(cs2).next().is_some()
     }
 
     fn dummy() -> Cost {
@@ -245,7 +249,7 @@ impl Cost {
 //    and see what goes wrong
 pub trait CostTarget {
     // Do I need to return an object back?
-    fn add_votes(&self, current_costs: &CostSet, votes: &mut CostVotes) -> bool;
+    fn add_votes(&self, costset: &CostSet, costvotes: &mut CostVotes) -> bool;
     fn str_rep(&self) -> &String;
 }
 
@@ -290,8 +294,9 @@ struct CostTargetHelper {
 
 impl CostTargetHelper {
     fn new(matches_needed: i16, mut unmet_w: i16, mut met_w: i16, cs: String) -> CostTargetHelper {
+        // Ensure that unmet_w >= met_w
         if unmet_w < met_w {
-            std::mem::swap(&mut unmet_w, &mut met_w);
+            std::mem::swap(&mut unmet_w, &mut met_w)
         };
         CostTargetHelper {
             matches_required: matches_needed,
@@ -304,7 +309,7 @@ impl CostTargetHelper {
 
 struct CostRelative {
     helper: CostTargetHelper,
-    cost_delta: i8,
+    cost_delta: Short,
     no_less: bool,
 }
 
@@ -313,7 +318,7 @@ impl CostTarget for CostRelative {
         &self.helper.cache_string
     }
 
-    // What consitutes matching here. People might like to use this to get a more expensive
+    // What constitutes matching here. People might like to use this to get a more expensive
     // card but technically any cost in range will do
     // also remember delta could be negative
     fn add_votes(&self, current_costs: &CostSet, votes: &mut CostVotes) -> bool {
@@ -321,7 +326,7 @@ impl CostTarget for CostRelative {
         for c in current_costs {
             let adj_cost = c.get_rel_cost(self.cost_delta);
             if current_costs.get(&adj_cost).is_some() {
-                matched_count += 1
+                matched_count += 1;
             }
         }
 
@@ -382,7 +387,7 @@ impl CostRelative {
         matches_needed: i16,
         unmet_w: i16,
         met_w: i16,
-        delta: i8,
+        delta: Short,
         strict: bool,
     ) -> CostRelative {
         CostRelative {
@@ -400,11 +405,11 @@ impl CostRelative {
 
 struct CostUpto {
     helper: CostTargetHelper,
-    limit: i8,
+    limit: Short,
 }
 
 impl CostUpto {
-    fn new(matches_needed: i16, unmet_w: i16, met_w: i16, upper: i8) -> CostUpto {
+    fn new(matches_needed: i16, unmet_w: i16, met_w: i16, upper: Short) -> CostUpto {
         CostUpto {
             helper: CostTargetHelper::new(matches_needed, unmet_w, met_w, format!("UT{}", upper)),
             limit: upper,
@@ -472,7 +477,7 @@ impl CostTarget for CostInSet {
         let mut matched_count = 0;
         for c in current_costs {
             if self.costs.get(c).is_some() {
-                matched_count += 1
+                matched_count += 1;
             }
         }
         let weight = if matched_count >= self.helper.matches_required {
@@ -540,25 +545,25 @@ impl CostVotes {
 // To do random stream, I need traits
 // This should go in a namespace eventually
 pub trait RandStream {
-    fn get(&mut self) -> u64;
-    fn init_seed(&self) -> u64;
+    fn get(&mut self) -> Unsigned;
+    fn init_seed(&self) -> Unsigned;
 }
 
 // This was hidden as an implementation detail in c++
 // Can I do something like that here?
 struct BadRand {
-    seed: u64,
-    cap: u64,
-    step: u64,
-    init: u64,
+    seed: Unsigned,
+    cap: Unsigned,
+    step: Unsigned,
+    init: Unsigned,
 }
 
-fn make_bad_rand(s: u64, bound: u64) -> BadRand {
+fn make_bad_rand(s: Unsigned, bound: Unsigned) -> BadRand {
     let cap = bound;
-    let mut setstep: u64 = 1; // Not convinced this init is necessary
+    let mut setstep: Unsigned = 1; // Not convinced this init is necessary
     let mut f = bound / 2 + 1;
     while f < cap {
-        let mut i: u64 = 2;
+        let mut i: Unsigned = 2;
         while i < f {
             if f % i == 0 {
                 break;
@@ -583,7 +588,7 @@ fn make_bad_rand(s: u64, bound: u64) -> BadRand {
 }
 
 impl RandStream for BadRand {
-    fn get(&mut self) -> u64 {
+    fn get(&mut self) -> Unsigned {
         if self.cap == 0 {
             return 0;
         }
@@ -591,12 +596,12 @@ impl RandStream for BadRand {
         self.seed = newseed;
         newseed
     }
-    fn init_seed(&self) -> u64 {
+    fn init_seed(&self) -> Unsigned {
         self.init
     }
 }
 
-fn get_rand_stream(s: u64, cap: u64, _use_bad_random: bool) -> impl RandStream {
+fn get_rand_stream(s: Unsigned, cap: Unsigned, _use_bad_random: bool) -> impl RandStream {
     // eventually want to make this conditional on use_bad_random
     make_bad_rand(s, cap)
 }
@@ -848,20 +853,20 @@ struct Config {
     rand: Box<dyn RandStream>,
     why: bool,
     more_info: bool,
-    optional_extras: u8,
+    optional_extras: UShort,
     validate: bool,
     list_collection: bool,
     disable_anti_cursors: bool,
     disable_attack_react: bool,
-    max_cost_repeat: u8,
-    min_types: HashMap<String, u8>,
-    max_types: HashMap<String, u8>,
+    max_cost_repeat: UShort,
+    min_types: HashMap<String, UShort>,
+    max_types: HashMap<String, UShort>,
     piles: PileSet,
     includes: PileSet,
 }
 
 fn bane_constraint(col: &CardCollectionPtr) -> ConstraintPtr {
-    let has_yw = NameProperty::make_ptr(&"Young Witch".to_string());
+    let has_yw = NameProperty::make_ptr("Young Witch");
     let mut cs = CostSet::new();
     cs.insert(Cost::new_s(2));
     cs.insert(Cost::new_s(3));
@@ -873,7 +878,7 @@ fn bane_constraint(col: &CardCollectionPtr) -> ConstraintPtr {
         Some(v) => v,
     };
     let fix = FindBane::make_ptr(col, &begin);
-    let has_bane = NoteProperty::make_ptr(&"hasBane".to_string());
+    let has_bane = NoteProperty::make_ptr("hasBane");
     // if we have less than 1 YoungWitch do nothing
     // if we have less than 1 hasBane note actionRequired   (only ever have 1 note)
     //.can accept more is empty (1,1)
@@ -893,7 +898,7 @@ fn bane_constraint(col: &CardCollectionPtr) -> ConstraintPtr {
 
 fn prosp_constraint(col: &CardCollectionPtr) -> ConstraintPtr {
     let group_pros = CardGroupProperty::make_ptr("Prosperity");
-    let has_pros_base = NoteProperty::make_ptr(&"addedProsperity-base".to_string());
+    let has_pros_base = NoteProperty::make_ptr("addedProsperity-base");
     let fix = AddGroup::make_ptr(col, &"Prosperity-base".to_string());
     // if we have less than 5 Prosperity cards do nothing
     // if we have less than 1 note, action required
@@ -909,7 +914,7 @@ fn prosp_constraint(col: &CardCollectionPtr) -> ConstraintPtr {
     )
 }
 
-fn curser_constraint(col: &CardCollectionPtr, threshold: u64) -> Option<ConstraintPtr> {
+fn curser_constraint(col: &CardCollectionPtr, threshold: Unsigned) -> Option<ConstraintPtr> {
     let curser = KeywordProperty::make_ptr("curser", false);
     let trash = KeywordProperty::make_ptr("trash_any", true);
     let begin = match col.get_iterators(&trash) {
@@ -929,7 +934,7 @@ fn curser_constraint(col: &CardCollectionPtr, threshold: u64) -> Option<Constrai
     ))
 }
 
-fn attack_react_constraint(col: &CardCollectionPtr, threshold: u64) -> Option<ConstraintPtr> {
+fn attack_react_constraint(col: &CardCollectionPtr, threshold: Unsigned) -> Option<ConstraintPtr> {
     let attack = TypeProperty::make_ptr("Attack", true);
     // only want kingdom and supply piles
     let react = OtherInteractionProperty::make_ptr("react(Attack)", true);
@@ -1223,6 +1228,10 @@ impl PartialEq for PropertyPtr {
     fn eq(&self, other: &Self) -> bool {
         Rc::as_ptr(&self.state) == Rc::as_ptr(&other.state)
     }
+
+    fn ne(&self, other: &Self) -> bool {
+        Rc::as_ptr(&self.state) == Rc::as_ptr(&other.state)
+    }
 }
 
 impl Eq for PropertyPtr {}
@@ -1280,7 +1289,7 @@ impl TypeProperty {
     fn make_ptr(has_type: &str, restrict_to_kingdom_and_supply: bool) -> PropertyPtr {
         PropertyPtr {
             state: Rc::new(TypeProperty {
-                type_name: has_type.to_owned(),
+                type_name: has_type.to_string(),
                 kingdom_and_supply: restrict_to_kingdom_and_supply,
             }),
         }
@@ -1309,7 +1318,7 @@ struct NameProperty {
 }
 
 impl NameProperty {
-    fn make_ptr(name: &String) -> PropertyPtr {
+    fn make_ptr(name: &str) -> PropertyPtr {
         PropertyPtr {
             state: Rc::new(NameProperty {
                 name: name.to_string(),
@@ -1370,7 +1379,7 @@ struct NoteProperty {
 }
 
 impl NoteProperty {
-    fn make_ptr(text: &String) -> PropertyPtr {
+    fn make_ptr(text: &str) -> PropertyPtr {
         PropertyPtr {
             state: Rc::new(NoteProperty {
                 text: text.to_string(),
@@ -1431,7 +1440,7 @@ impl CardGroupProperty {
     fn make_ptr(group_name: &str) -> PropertyPtr {
         PropertyPtr {
             state: Rc::new(CardGroupProperty {
-                group_name: group_name.to_owned(),
+                group_name: group_name.to_string(),
             }),
         }
     }
@@ -1489,7 +1498,7 @@ impl OtherInteractionProperty {
     fn make_ptr(other_interact: &str, kingdom_and_supply: bool) -> PropertyPtr {
         PropertyPtr {
             state: Rc::new(OtherInteractionProperty {
-                other_interact: other_interact.to_owned(),
+                other_interact: other_interact.to_string(),
                 kingdom_and_supply,
             }),
         }
@@ -1697,11 +1706,11 @@ impl Property for FailProperty {
 }
 
 struct RepeatedCostProperty {
-    max_repeats: u64,
+    max_repeats: Unsigned,
 }
 
 impl RepeatedCostProperty {
-    fn make_ptr(max_repeats: u64) -> PropertyPtr {
+    fn make_ptr(max_repeats: Unsigned) -> PropertyPtr {
         PropertyPtr {
             state: Rc::new(RepeatedCostProperty { max_repeats }),
         }
@@ -1718,7 +1727,7 @@ impl Property for RepeatedCostProperty {
     }
 
     fn selection_meets(&self, s: &SelectionPtr) -> bool {
-        let mut counts: HashMap<Cost, u64> = HashMap::new();
+        let mut counts: HashMap<Cost, Unsigned> = HashMap::new();
         for c in s.get_cost_set() {
             counts.insert(*c, 0);
         }
@@ -1842,7 +1851,7 @@ impl KeywordProperty {
     fn make_ptr(keyword: &str, restrict_to_kingdom_and_supply: bool) -> PropertyPtr {
         PropertyPtr {
             state: Rc::new(KeywordProperty {
-                keyword: keyword.to_owned(),
+                keyword: keyword.to_string(),
                 kingdom_and_supply: restrict_to_kingdom_and_supply,
             }),
         }
@@ -1887,11 +1896,11 @@ impl Property for KeywordInteractionProperty {
 }
 
 struct NeedProsperity {
-    threshold: u8,
+    threshold: UShort,
 }
 
 impl NeedProsperity {
-    fn make_ptr(threshold: u8) -> PropertyPtr {
+    fn make_ptr(threshold: UShort) -> PropertyPtr {
         PropertyPtr {
             state: Rc::new(NeedProsperity { threshold }),
         }
@@ -1961,9 +1970,9 @@ struct FindBane {
 impl FindBane {
     fn make_ptr(col: &CardCollectionPtr, begin_it: &CollectionIterator) -> ConstraintActionPtr {
         ConstraintActionPtr(Rc::new(FindBane {
-                begin: begin_it.clone(),
-                col: col.clone(),
-            }))
+            begin: begin_it.clone(),
+            col: col.clone(),
+        }))
     }
 }
 
@@ -1996,9 +2005,9 @@ struct AddGroup {
 impl AddGroup {
     fn make_ptr(coll: &CardCollectionPtr, group: &String) -> ConstraintActionPtr {
         ConstraintActionPtr(Rc::new(AddGroup {
-                group: group.to_string(),
-                coll: coll.clone(),
-            }))
+            group: group.to_string(),
+            coll: coll.clone(),
+        }))
     }
 }
 
@@ -2023,8 +2032,7 @@ impl ConstraintAction for AddGroup {
             };
         } // maybe some got added some other way?
         new_sel.add_note(&format!("added{}", self.group));
-        self
-            .coll
+        self.coll
             .build_selection(&SelectionPtr::from_state(new_sel))
     }
 }
@@ -2037,9 +2045,9 @@ struct FindPile {
 impl FindPile {
     fn make_ptr(col: &CardCollectionPtr, begin_it: &CollectionIterator) -> ConstraintActionPtr {
         ConstraintActionPtr(Rc::new(FindPile {
-                begin: begin_it.clone(),
-                col: col.clone(),
-            }))
+            begin: begin_it.clone(),
+            col: col.clone(),
+        }))
     }
 }
 
@@ -2223,10 +2231,10 @@ struct Constraint {
     property: PropertyPtr,
     precondition: Option<PropertyPtr>,
     action: Option<ConstraintActionPtr>,
-    prop_active: u64,    // x
-    prop_satisfied: u64, // a
-    prop_inactive: u64,  // b
-    prop_broken: u64,    // c
+    prop_active: Unsigned,    // x
+    prop_satisfied: Unsigned, // a
+    prop_inactive: Unsigned,  // b
+    prop_broken: Unsigned,    // c
     why: String,
 }
 
@@ -2248,8 +2256,8 @@ impl Constraint {
         label: String,
         prop: &PropertyPtr,
         act: Option<ConstraintActionPtr>,
-        min: u64,
-        max: u64,
+        min: Unsigned,
+        max: Unsigned,
     ) -> ConstraintPtr {
         Rc::new(Constraint {
             property: prop.clone(),
@@ -2268,10 +2276,10 @@ impl Constraint {
         pre: Option<PropertyPtr>,
         prop: &PropertyPtr,
         act: Option<ConstraintActionPtr>,
-        x: u64,
-        a: u64,
-        b: u64,
-        c: u64,
+        x: Unsigned,
+        a: Unsigned,
+        b: Unsigned,
+        c: Unsigned,
     ) -> ConstraintPtr {
         Rc::new(Constraint {
             property: prop.clone(),
@@ -2330,9 +2338,7 @@ impl Constraint {
 
     fn act(&self, start: &SelectionPtr) -> Result<SelectionPtr, String> {
         match &self.action {
-            Some(act) => {
-                act.apply(&self.why, start)
-            }
+            Some(act) => act.apply(&self.why, start),
             None => Err("".to_string()),
         }
     }
@@ -2345,8 +2351,8 @@ struct SelectionState {
     cards: Cards,
     constraints: Rc<RefCell<Vec<ConstraintPtr>>>,
     tags: RefCell<BTreeMap<PilePtr, Vec<String>>>,
-    required_cards: u8,
-    current_normal_pile_count: u8,
+    required_cards: UShort,
+    current_normal_pile_count: UShort,
     notes: BTreeSet<String>,
     need_items: RefCell<BTreeSet<String>>, // <= required_cards
     costs_in_supply: CostSet,
@@ -2354,8 +2360,8 @@ struct SelectionState {
     target_check_required: RefCell<bool>,
     target_blame: RefCell<String>, // piles responsible for cost target
     targets: Targets,
-    interacts_keywords: BTreeMap<String, u64>,
-    keywords: BTreeMap<String, u64>,
+    interacts_keywords: BTreeMap<String, Unsigned>,
+    keywords: BTreeMap<String, Unsigned>,
     card_coll: CardCollectionPtr,
     begin_general: RefCell<CollectionIterator>,
 }
@@ -2476,7 +2482,7 @@ impl SelectionState {
     fn new2(
         col: &CardCollectionPtr,
         general_begin: CollectionIterator,
-        market_cap: u8,
+        market_cap: UShort,
     ) -> SelectionState {
         SelectionState {
             piles: Piles::new(),
@@ -2503,7 +2509,7 @@ impl SelectionState {
     fn new1(
         coll: &CardCollectionPtr,
         general_begin: CollectionIterator,
-        market_cap: u8,
+        market_cap: UShort,
     ) -> SelectionState {
         SelectionState::new2(coll, general_begin, market_cap)
     }
@@ -2670,11 +2676,11 @@ impl SelectionPtr {
         };
     }
 
-    fn get_normal_pile_count(&self) -> u8 {
+    fn get_normal_pile_count(&self) -> UShort {
         self.state.current_normal_pile_count
     }
 
-    fn get_required_count(&self) -> u8 {
+    fn get_required_count(&self) -> UShort {
         self.state.required_cards
     }
 
@@ -2718,11 +2724,11 @@ impl SelectionPtr {
         &self.state.card_coll
     }
 
-    fn get_interacts_keywords(&self) -> &BTreeMap<String, u64> {
+    fn get_interacts_keywords(&self) -> &BTreeMap<String, Unsigned> {
         &self.state.interacts_keywords
     }
 
-    fn get_keywords(&self) -> &BTreeMap<String, u64> {
+    fn get_keywords(&self) -> &BTreeMap<String, Unsigned> {
         &self.state.keywords
     }
 }
@@ -2779,20 +2785,20 @@ fn show_options(legal_options: &HashMap<String, String>) {
     println!("Arguments which take further input are of the form --opt=a,b,c")
 }
 
-fn short_value(s: &str) -> i8 {
-    s.parse::<i8>().unwrap_or(-1)
+fn short_value(s: &str) -> Short {
+    s.parse::<Short>().unwrap_or(-1)
 }
 
-fn ushort_value(s: &str) -> u8 {
-    s.parse::<u8>().unwrap_or(0)
+fn ushort_value(s: &str) -> UShort {
+    s.parse::<UShort>().unwrap_or(0)
 }
 
 fn bool_value(s: &str) -> bool {
     s == "Y" || s == "y"
 }
 
-fn unsigned_value(s: &str) -> u64 {
-    s.parse::<u64>().unwrap_or(0)
+fn unsigned_value(s: &str) -> Unsigned {
+    s.parse::<Unsigned>().unwrap_or(0)
 }
 
 fn decode_cost(s: &str) -> Option<TargetPtr> {
@@ -3017,24 +3023,24 @@ fn read_boxes(fname: &String) -> Result<StringMultiMap, String> {
     Ok(res)
 }
 
-fn caps(v: usize) -> i8 {
-    match i8::try_from(v) {
+fn caps(v: usize) -> Short {
+    match Short::try_from(v) {
         Ok(res) => res,
-        Err(_) => i8::MAX - 1,
+        Err(_) => Short::MAX - 1,
     }
 }
 
-fn capus(v: usize) -> u8 {
-    match u8::try_from(v) {
+fn capus(v: usize) -> UShort {
+    match UShort::try_from(v) {
         Ok(res) => res,
-        Err(_) => u8::MAX - 1,
+        Err(_) => UShort::MAX - 1,
     }
 }
 
-fn capu(v: usize) -> u64 {
-    match u64::try_from(v) {
+fn capu(v: usize) -> Unsigned {
+    match Unsigned::try_from(v) {
         Ok(res) => res,
-        Err(_) => u64::MAX - 1,
+        Err(_) => Unsigned::MAX - 1,
     }
 }
 
@@ -3067,8 +3073,7 @@ fn load_cards(
     let mut error: String = "".to_string();
 
     for item in input.lines().skip(1) {
-        
-        let line: String = match item {
+        let line = match item {
             Err(_) => continue,
             Ok(l) => l,
         };
@@ -3125,11 +3130,10 @@ fn load_cards(
             result_piles.push(PilePtr::new(p));
         }
     }
-    if error.is_empty()
     // only check for unknown card names if no error
-    {
-        for (k, v) in exclude_names {
-            if !*v {
+    if error.is_empty() {
+        for (k, &mut v) in exclude_names {
+            if !v {
                 error = format!("Unknown card {}", k);
                 break;
             }
@@ -3156,14 +3160,14 @@ fn load_config(args: Vec<String>, card_file: String, box_file: String) -> Result
         // This should not return a config but it isn't really an error
         // I'll send back an empty string
         return Err("".to_string()); // this is not correct but I need a marker
-    };
+    }
     // build an exclusion list of cardnames to drop
     let mut exclude_names: HashMap<String, bool> = HashMap::new();
     if let Some(v) = m.get(&"--exclude".to_string()) {
         for p in v {
             exclude_names.insert(p.to_string(), false);
         }
-    };
+    }
     // groups we need
     let mut required_groups: HashMap<String, bool> = HashMap::new();
     let card_filename = match m.get(&"--cardfile".to_string()) {
@@ -3206,17 +3210,15 @@ fn load_config(args: Vec<String>, card_file: String, box_file: String) -> Result
         // now we start processing the --boxes param
         for bp in box_names {
             match box_to_set.get(bp) {
-                None => {
-                    return Err(format!("Box {} not known in box file {}", bp, box_filename))
-                }
+                None => return Err(format!("Box {} not known in box file {}", bp, box_filename)),
                 Some(e) => {
                     for name in e {
                         required_groups.insert(name.to_string(), false);
                     }
                 }
-            };
+            }
         }
-    };
+    }
 
     let mut p_set = PileSet::new();
 
@@ -3224,7 +3226,7 @@ fn load_config(args: Vec<String>, card_file: String, box_file: String) -> Result
         for v in e {
             required_groups.insert(v.to_string(), false);
         }
-    };
+    }
     if !required_groups.is_empty() {
         required_groups.insert("base".to_string(), false); // avoid invalid games
         let mut to_drop: Vec<String> = vec![];
@@ -3251,7 +3253,7 @@ fn load_config(args: Vec<String>, card_file: String, box_file: String) -> Result
         for p in temp_piles {
             p_set.insert(p); // add all piles
         }
-    };
+    }
     let mut include_piles: PileSet = PileSet::new();
     if let Some(e) = m.get(&"--include".to_string()) {
         for name in e {
@@ -3269,60 +3271,85 @@ fn load_config(args: Vec<String>, card_file: String, box_file: String) -> Result
                 return Err(format!("Can't find card {}", name));
             };
         }
-    };
+    }
 
-    let mut min_types: HashMap<String, u8> = HashMap::new();
-    if let Some(v) = m.get("--min-type") {
-        for s in v {
-            match split_once(s, ':') {
-                None => continue,
-                Some((lhs, rhs)) => {
-                    if lhs.is_empty() {
-                        continue;
+    let mut min_types: HashMap<String, UShort> = HashMap::new();
+    match m.get("--min-type") {
+        None => (),
+        Some(v) => {
+            for s in v {
+                match split_once(s, ':') {
+                    None => continue,
+                    Some((lhs, rhs)) => {
+                        if lhs.is_empty() {
+                            continue;
+                        }
+                        let typecount = ushort_value(rhs);
+                        min_types.insert(lhs.to_string(), typecount);
                     }
-                    let typecount = ushort_value(rhs);
-                    min_types.insert(lhs.to_string(), typecount);
                 }
             }
         }
-    };
-    let mut max_types: HashMap<String, u8> = HashMap::new();
-    if let Some(v) = m.get("--max-type") {
-        for s in v {
-            match split_once(s, ':') {
-                None => continue,
-                Some((lhs, rhs)) => {
-                    if lhs.is_empty() {
-                        continue;
+    }
+    let mut max_types: HashMap<String, UShort> = HashMap::new();
+    match m.get("--max-type") {
+        None => (),
+        Some(v) => {
+            for s in v {
+                match split_once(s, ':') {
+                    None => continue,
+                    Some((lhs, rhs)) => {
+                        if lhs.is_empty() {
+                            continue;
+                        }
+                        let typecount = ushort_value(rhs);
+                        max_types.insert(lhs.to_string(), typecount);
                     }
-                    let typecount = ushort_value(rhs);
-                    max_types.insert(lhs.to_string(), typecount);
                 }
             }
         }
-    };
-    let use_bad_rand = m.get(&"--badrand".to_string()).is_some();
-    let mut seed: u64 = 0;
+    }
+    let mut use_bad_rand = false;
+    match m.get(&"--badrand".to_string()) {
+        None => (),
+        Some(_) => use_bad_rand = true,
+    }
+    let mut seed: Unsigned = 0;
     let mut chose_seed = false;
-    if let Some(v) = m.get(&"--seed".to_string()) {
-        if !v.is_empty() {
-            seed = unsigned_value(&v[0]);
-            chose_seed = true;
-        };
-    };
+    match m.get(&"--seed".to_string()) {
+        None => (),
+        Some(v) => {
+            if v.is_empty() {
+                seed = unsigned_value(&v[0]);
+                chose_seed = true;
+            };
+        }
+    }
     let mut max_cost_repeat = 0;
-    if let Some(v) = m.get(&"--max-cost-repeat".to_string()) {
-        if !v.is_empty() {
-            max_cost_repeat = ushort_value(&v[0]);
+    match m.get(&"--max-cost-repeat".to_string()) {
+        None => (),
+        Some(v) => {
+            if v.is_empty() {
+                max_cost_repeat = ushort_value(&v[0]);
+            }
         }
-    };
+    }
     let mut validate = true;
-    if let Some(v) = m.get(&"--no-validate".to_string()) {
-        if !v.is_empty() {
-            validate = bool_value(&v[0]);
+    match m.get(&"--no-validate".to_string()) {
+        None => (),
+        Some(v) => {
+            if v.is_empty() {
+                validate = bool_value(&v[0]);
+            }
         }
     };
-    let list_collection = m.get(&"--list".to_string()).is_some();
+    let mut list_collection = false;
+    match m.get(&"--list".to_string()) {
+        None => (),
+        Some(_) => {
+            list_collection = true;
+        }
+    };
     // now we set up randomiser
     // The cap here is arbitrary (want it to be at least as big
     // as 3 x pile size for shuffling
@@ -3341,7 +3368,7 @@ fn load_config(args: Vec<String>, card_file: String, box_file: String) -> Result
     match m.get(&"--max-prefixes".to_string()) {
         None => (),
         Some(v) => {
-            if !v.is_empty() {
+            if v.is_empty() {
                 let mut suggested_max = ushort_value(&v[0]);
                 if suggested_max > 0 {
                     suggested_max += 1;
@@ -3392,7 +3419,7 @@ fn load_config(args: Vec<String>, card_file: String, box_file: String) -> Result
     // Now let's work out how many optional extras we need
     let opt_extra = match m.get(&"--landscape-count".to_string()) {
         None => {
-            let x = (rand.get() % 7) as u8;
+            let x = (rand.get() % 7) as UShort;
             if x < 3 {
                 x
             } else {
@@ -3400,7 +3427,7 @@ fn load_config(args: Vec<String>, card_file: String, box_file: String) -> Result
             }
         }
         Some(v) => {
-            if !v.is_empty() {
+            if v.is_empty() {
                 ushort_value(&v[0])
             } else {
                 0
@@ -3526,8 +3553,8 @@ impl CardColl {
     // Wrapper for starting, building and finishing a selection
     fn generate_selection(
         &self,
-        market_cap: u8,
-        landscapes: u8,
+        market_cap: UShort,
+        landscapes: UShort,
         includes: &PileSet,
         cons: &Vec<ConstraintPtr>,
         rand: &mut Box<dyn RandStream>,
@@ -3555,7 +3582,7 @@ impl CardColl {
         Ok(res)
     }
 
-    fn start_selection(&self, market_cap: u8, landscapes: u8) -> Option<SelectionState> {
+    fn start_selection(&self, market_cap: UShort, landscapes: UShort) -> Option<SelectionState> {
         let base = CardGroupProperty::make_ptr("base");
         let begin = match self.get_iterators(&base) {
             Some(v) => v,
@@ -3584,7 +3611,7 @@ impl CardColl {
             if let Some(begin) = self.get_iterators(&oep) {
                 // in c++ this was a multi-condition for loop
                 for (count, i) in begin.enumerate() {
-                    if count as u8 >= landscapes {
+                    if count >= landscapes as usize {
                         break;
                     };
                     // should not be able to fail adding
@@ -3817,8 +3844,8 @@ impl CardColl {
             });
             //return Ok(start.clone());
         }
-        for s in status.iter().take(size) {
-            if s == &ConsMorePossible {
+        for item in status.iter().take(size) {
+            if *item == ConsMorePossible {
                 // should take action on this constraint
                 break;
             }
@@ -3884,8 +3911,9 @@ impl CardColl {
                             // need to work out how to give more useful feedback
                             let why = format!("<why?cost-target:{}>", blame);
                             new_sel.tag_pile(&next, &why);
-                            if let Ok(s) = self.build_selection(&SelectionPtr::from_state(new_sel)) {
-                                return Ok(s)
+                            if let Ok(s) = self.build_selection(&SelectionPtr::from_state(new_sel))
+                            {
+                                return Ok(s);
                             }
                         }
                     }
@@ -3966,7 +3994,7 @@ fn main() {
             CollectionStatus::CollWarning(v) => v,
             CollectionStatus::_CollFatal(v) => v,
         };
-        if !warnings.is_empty() {
+        if warnings.is_empty() {
             println!("Error validating collection:");
             for s in warnings {
                 println!("{}", s);
