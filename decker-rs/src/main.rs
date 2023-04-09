@@ -378,13 +378,7 @@ impl CostTarget for CostRelative {
 }
 
 impl CostRelative {
-    fn new(
-        matches_needed: i16,
-        unmet_w: i16,
-        met_w: i16,
-        delta: i8,
-        strict: bool,
-    ) -> CostRelative {
+    fn new(matches_needed: i16, unmet_w: i16, met_w: i16, delta: i8, strict: bool) -> CostRelative {
         CostRelative {
             helper: CostTargetHelper::new(
                 matches_needed,
@@ -1961,9 +1955,9 @@ struct FindBane {
 impl FindBane {
     fn make_ptr(col: &CardCollectionPtr, begin_it: &CollectionIterator) -> ConstraintActionPtr {
         ConstraintActionPtr(Rc::new(FindBane {
-                begin: begin_it.clone(),
-                col: col.clone(),
-            }))
+            begin: begin_it.clone(),
+            col: col.clone(),
+        }))
     }
 }
 
@@ -1996,9 +1990,9 @@ struct AddGroup {
 impl AddGroup {
     fn make_ptr(coll: &CardCollectionPtr, group: &String) -> ConstraintActionPtr {
         ConstraintActionPtr(Rc::new(AddGroup {
-                group: group.to_string(),
-                coll: coll.clone(),
-            }))
+            group: group.to_string(),
+            coll: coll.clone(),
+        }))
     }
 }
 
@@ -2023,8 +2017,7 @@ impl ConstraintAction for AddGroup {
             };
         } // maybe some got added some other way?
         new_sel.add_note(&format!("added{}", self.group));
-        self
-            .coll
+        self.coll
             .build_selection(&SelectionPtr::from_state(new_sel))
     }
 }
@@ -2037,9 +2030,9 @@ struct FindPile {
 impl FindPile {
     fn make_ptr(col: &CardCollectionPtr, begin_it: &CollectionIterator) -> ConstraintActionPtr {
         ConstraintActionPtr(Rc::new(FindPile {
-                begin: begin_it.clone(),
-                col: col.clone(),
-            }))
+            begin: begin_it.clone(),
+            col: col.clone(),
+        }))
     }
 }
 
@@ -2330,9 +2323,7 @@ impl Constraint {
 
     fn act(&self, start: &SelectionPtr) -> Result<SelectionPtr, String> {
         match &self.action {
-            Some(act) => {
-                act.apply(&self.why, start)
-            }
+            Some(act) => act.apply(&self.why, start),
             None => Err("".to_string()),
         }
     }
@@ -3067,7 +3058,6 @@ fn load_cards(
     let mut error: String = "".to_string();
 
     for item in input.lines().skip(1) {
-        
         let line: String = match item {
             Err(_) => continue,
             Ok(l) => l,
@@ -3206,9 +3196,7 @@ fn load_config(args: Vec<String>, card_file: String, box_file: String) -> Result
         // now we start processing the --boxes param
         for bp in box_names {
             match box_to_set.get(bp) {
-                None => {
-                    return Err(format!("Box {} not known in box file {}", bp, box_filename))
-                }
+                None => return Err(format!("Box {} not known in box file {}", bp, box_filename)),
                 Some(e) => {
                     for name in e {
                         required_groups.insert(name.to_string(), false);
@@ -3884,8 +3872,9 @@ impl CardColl {
                             // need to work out how to give more useful feedback
                             let why = format!("<why?cost-target:{}>", blame);
                             new_sel.tag_pile(&next, &why);
-                            if let Ok(s) = self.build_selection(&SelectionPtr::from_state(new_sel)) {
-                                return Ok(s)
+                            if let Ok(s) = self.build_selection(&SelectionPtr::from_state(new_sel))
+                            {
+                                return Ok(s);
                             }
                         }
                     }
