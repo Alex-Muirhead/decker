@@ -252,7 +252,7 @@ impl Cost {
 //    and see what goes wrong
 pub trait CostTarget {
     // Do I need to return an object back?
-    fn add_votes(&self, &CostSet, &mut CostVotes) -> bool;
+    fn add_votes(&self, _: &CostSet, _: &mut CostVotes) -> bool;
     fn str_rep(&self) -> &String;
 }
 
