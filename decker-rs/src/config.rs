@@ -14,8 +14,7 @@ use crate::piles::PileSet;
 use crate::properties::prelude::*;
 
 use crate::{
-    bool_value, caps, capu, capus, group_name_prefix, organise_args, read_boxes, split_once,
-    unsigned_value, ushort_value, Cli, StringMultiMap, MANY,
+    caps, capu, capus, group_name_prefix, organise_args, read_boxes, Cli, StringMultiMap, MANY,
 };
 
 fn get_legal_options() -> HashMap<String, String> {
@@ -384,54 +383,28 @@ pub fn load_config(
         }
         Ok(m) => m,
     };
-    // build an exclusion list of cardnames to drop
-    let mut exclude_names: HashMap<String, bool> = HashMap::new();
-    if let Some(v) = m.get(&"--exclude".to_string()) {
-        for p in v {
-            exclude_names.insert(p.to_string(), false);
-        }
-    };
-    // groups we need
-    let mut required_groups: HashMap<String, bool> = HashMap::new();
-    let card_filename = match m.get(&"--cardfile".to_string()) {
-        Some(v) => {
-            if v.is_empty() || v[0].is_empty() {
-                return Err("No card file specified".to_string());
-            }
-            &v[0]
-        }
-        None => &card_file,
-    };
-    let temp_piles = match load_cards(card_filename, &mut exclude_names) {
-        Err(s) => {
-            return Err(s);
-        }
-        Ok(v) => v,
-    };
 
-    if let Some(box_names) = m.get(&"--boxes".to_string()) {
-        let box_filename = match m.get(&"--boxfile".to_string()) {
-            Some(f) => {
-                if f.is_empty() {
-                    "".to_string()
-                } else {
-                    f[0].clone()
-                }
-            }
-            None => box_file,
-        };
+    let mut exclude_names =
+        HashMap::from_iter(cli.exclude.iter().map(|name| (name.clone(), false)));
+
+    let card_filename = &cli.cardfile.unwrap_or(card_file);
+
+    let temp_piles = load_cards(card_filename, &mut exclude_names)?;
+    let mut required_groups: HashMap<String, bool> = HashMap::new();
+
+    if !cli.boxes.is_empty() {
+        let box_filename = cli.boxfile.unwrap_or(box_file);
         if box_filename.is_empty() {
             return Err("No box file specified.".to_string());
         }
-        let box_to_set = match read_boxes(&box_filename) {
-            Err(s) => return Err(s),
-            Ok(v) => v,
-        };
+
+        let box_to_set = read_boxes(&box_filename)?;
         if box_to_set.is_empty() {
             return Err("--boxes specified but no boxes known (use --boxfile).".to_string());
         };
+
         // now we start processing the --boxes param
-        for bp in box_names {
+        for bp in cli.boxes.iter() {
             match box_to_set.get(bp) {
                 None => return Err(format!("Box {} not known in box file {}", bp, box_filename)),
                 Some(e) => {
@@ -439,17 +412,15 @@ pub fn load_config(
                         required_groups.insert(name.to_string(), false);
                     }
                 }
-            };
+            }
         }
-    };
+    }
+
+    for group_name in cli.groups {
+        required_groups.insert(group_name.to_string(), false);
+    }
 
     let mut p_set = PileSet::new();
-
-    if let Some(e) = m.get(&"--groups".to_string()) {
-        for v in e {
-            required_groups.insert(v.to_string(), false);
-        }
-    };
     if !required_groups.is_empty() {
         required_groups.insert("base".to_string(), false); // avoid invalid games
         let mut to_drop: Vec<String> = vec![];
@@ -477,77 +448,54 @@ pub fn load_config(
             p_set.insert(p); // add all piles
         }
     };
+
     let mut include_piles: PileSet = PileSet::new();
-    if let Some(e) = m.get(&"--include".to_string()) {
-        for name in e {
-            let mut found = false;
-            'overset: for pile in &p_set {
-                for c in pile.get_cards() {
-                    if c.get_name() == name {
-                        include_piles.insert(pile.clone());
-                        found = true;
-                        break 'overset;
-                    }
+    for name in cli.include {
+        let mut found = false;
+        'overset: for pile in &p_set {
+            for card in pile.get_cards() {
+                if card.get_name() == name {
+                    include_piles.insert(pile.clone());
+                    found = true;
+                    break 'overset;
                 }
             }
-            if !found {
-                return Err(format!("Can't find card {}", name));
-            };
         }
-    };
+        if !found {
+            return Err(format!("Can't find card {}", name));
+        }
+    }
 
     let mut min_types: HashMap<String, u8> = HashMap::new();
-    if let Some(v) = m.get("--min-type") {
-        for s in v {
-            match split_once(s, ':') {
-                None => continue,
-                Some((lhs, rhs)) => {
-                    if lhs.is_empty() {
-                        continue;
-                    }
-                    let typecount = ushort_value(rhs);
-                    min_types.insert(lhs.to_string(), typecount);
-                }
+    for s in cli.min_type.iter() {
+        // Checking for valid inputs of form "Type:Int"
+        match s.split_once(':') {
+            Some((lhs, rhs)) if !lhs.is_empty() => {
+                let typecount = rhs.parse::<u8>().unwrap_or(0);
+                min_types.insert(lhs.to_string(), typecount);
             }
+            _ => continue,
         }
-    };
+    }
+
     let mut max_types: HashMap<String, u8> = HashMap::new();
-    if let Some(v) = m.get("--max-type") {
-        for s in v {
-            match split_once(s, ':') {
-                None => continue,
-                Some((lhs, rhs)) => {
-                    if lhs.is_empty() {
-                        continue;
-                    }
-                    let typecount = ushort_value(rhs);
-                    max_types.insert(lhs.to_string(), typecount);
-                }
+    for s in cli.max_type.iter() {
+        match s.split_once(':') {
+            Some((lhs, rhs)) if !lhs.is_empty() => {
+                let typecount = rhs.parse::<u8>().unwrap_or(0);
+                max_types.insert(lhs.to_string(), typecount);
             }
+            _ => continue,
         }
-    };
-    let use_bad_rand = m.get(&"--badrand".to_string()).is_some();
-    let mut seed: u64 = 0;
-    let mut chose_seed = false;
-    if let Some(v) = m.get(&"--seed".to_string()) {
-        if !v.is_empty() {
-            seed = unsigned_value(&v[0]);
-            chose_seed = true;
-        };
-    };
-    let mut max_cost_repeat = 0;
-    if let Some(v) = m.get(&"--max-cost-repeat".to_string()) {
-        if !v.is_empty() {
-            max_cost_repeat = ushort_value(&v[0]);
-        }
-    };
-    let mut validate = true;
-    if let Some(v) = m.get(&"--no-validate".to_string()) {
-        if !v.is_empty() {
-            validate = bool_value(&v[0]);
-        }
-    };
-    let list_collection = m.get(&"--list".to_string()).is_some();
+    }
+
+    let use_bad_rand = cli.badrand;
+    let seed = cli.seed.unwrap_or(0);
+    let chose_seed = cli.seed.is_some();
+    let max_cost_repeat = cli.max_cost_repeat;
+    let validate = !cli.no_validate;
+    let list_collection = cli.list;
+
     // now we set up randomiser
     // The cap here is arbitrary (want it to be at least as big
     // as 3 x pile size for shuffling
@@ -563,79 +511,70 @@ pub fn load_config(
     // We need to take into account which prefixes any
     // --include cards force in (and also if that exceeds
     // the limit
-    match m.get(&"--max-prefixes".to_string()) {
-        None => (),
-        Some(v) => {
-            if !v.is_empty() {
-                let mut suggested_max = ushort_value(&v[0]);
-                if suggested_max > 0 {
-                    suggested_max += 1;
-                    let mut chosen_prefixes = HashSet::<String>::new();
-                    chosen_prefixes.insert("base".to_string());
-                    for ip in &include_piles {
-                        chosen_prefixes.insert(group_name_prefix(ip.get_card_group()));
-                    }
-                    if capus(chosen_prefixes.len()) > suggested_max {
-                        // need to -1 from both numbers because of hidden "base" group
-                        return Err(format!("Requested at most {} big groups, but included cards are drawn from {}.", suggested_max-1, chosen_prefixes.len()-1));
-                    };
-                    let mut group_prefixes = BTreeSet::<String>::new();
-                    for p in &p_set {
-                        group_prefixes.insert(group_name_prefix(p.get_card_group()));
-                    }
-                    // now shuffle the prefixes
-                    let mut shuffle_prefixes: Vec<String> = vec![];
-                    for s in group_prefixes {
-                        shuffle_prefixes.push(s);
-                    }
-                    let n_sets = caps(shuffle_prefixes.len());
-                    // wow, could have named these better
-                    for _i in 0..3 {
-                        for i in 0..(n_sets as usize) {
-                            let pos: usize = (rand.get() % (n_sets as u64)) as usize;
-                            if i != pos {
-                                shuffle_prefixes.swap(i, pos);
-                            }
-                        }
-                    }
-                    let mut i = 0;
-                    while i < n_sets && chosen_prefixes.len() < (suggested_max as usize) {
-                        chosen_prefixes.insert(shuffle_prefixes[i as usize].to_string());
-                        i += 1;
-                    }
-                    let mut new_files = PileSet::new();
-                    for p2 in p_set {
-                        if chosen_prefixes.contains(&group_name_prefix(p2.get_card_group())) {
-                            new_files.insert(p2.clone());
-                        }
-                    }
-                    p_set = new_files;
-                };
+
+    let mut suggested_max = cli.max_prefixes;
+    if suggested_max > 0 {
+        suggested_max += 1;
+        let mut chosen_prefixes = HashSet::<String>::new();
+        chosen_prefixes.insert("base".to_string());
+        for ip in &include_piles {
+            chosen_prefixes.insert(group_name_prefix(ip.get_card_group()));
+        }
+        if capus(chosen_prefixes.len()) > suggested_max {
+            // need to -1 from both numbers because of hidden "base" group
+            return Err(format!(
+                "Requested at most {} big groups, but included cards are drawn from {}.",
+                suggested_max - 1,
+                chosen_prefixes.len() - 1
+            ));
+        };
+        let mut group_prefixes = BTreeSet::<String>::new();
+        for p in &p_set {
+            group_prefixes.insert(group_name_prefix(p.get_card_group()));
+        }
+        // now shuffle the prefixes
+        let mut shuffle_prefixes: Vec<String> = vec![];
+        for s in group_prefixes {
+            shuffle_prefixes.push(s);
+        }
+        let n_sets = caps(shuffle_prefixes.len());
+        // wow, could have named these better
+        for _i in 0..3 {
+            for i in 0..(n_sets as usize) {
+                let pos: usize = (rand.get() % (n_sets as u64)) as usize;
+                if i != pos {
+                    shuffle_prefixes.swap(i, pos);
+                }
             }
         }
-    };
+        let mut i = 0;
+        while i < n_sets && chosen_prefixes.len() < (suggested_max as usize) {
+            chosen_prefixes.insert(shuffle_prefixes[i as usize].to_string());
+            i += 1;
+        }
+        let mut new_files = PileSet::new();
+        for p2 in p_set {
+            if chosen_prefixes.contains(&group_name_prefix(p2.get_card_group())) {
+                new_files.insert(p2.clone());
+            }
+        }
+        p_set = new_files;
+    }
+
     // Now let's work out how many optional extras we need
-    let opt_extra = match m.get(&"--landscape-count".to_string()) {
-        None => {
-            let x = (rand.get() % 7) as u8;
-            if x < 3 {
-                x
-            } else {
-                0
-            }
+    let opt_extra = cli.landscape_count.unwrap_or_else(|| {
+        let x = (rand.get() % 7) as u8;
+        if x < 3 {
+            x
+        } else {
+            0
         }
-        Some(v) => {
-            if !v.is_empty() {
-                ushort_value(&v[0])
-            } else {
-                0
-            }
-        }
-    };
-    let why = m.get(&"--why".to_string()).is_some();
-    let more_info = m.get(&"--info".to_string()).is_some();
-    let disable_anti_cursors = m.get(&"--no-anti-cursor".to_string()).is_some();
-    let disable_attack_react = m.get(&"--no-attack-react".to_string()).is_some();
+    });
+
+    let why = cli.why;
+    let more_info = cli.info;
+    let disable_anti_cursors = cli.no_anti_cursor;
+    let disable_attack_react = cli.no_attack_react;
 
     Ok(Config {
         args: m,

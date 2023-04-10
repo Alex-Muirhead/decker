@@ -79,16 +79,8 @@ fn short_value(s: &str) -> i8 {
     s.parse::<i8>().unwrap_or(-1)
 }
 
-fn ushort_value(s: &str) -> u8 {
-    s.parse::<u8>().unwrap_or(0)
-}
-
 fn bool_value(s: &str) -> bool {
     s == "Y" || s == "y"
-}
-
-fn unsigned_value(s: &str) -> u64 {
-    s.parse::<u64>().unwrap_or(0)
 }
 
 fn string_split(s: &str, sep: char) -> Vec<String> {
@@ -165,19 +157,19 @@ fn group_name_prefix(group_name: &str) -> String {
 #[derive(Parser)]
 pub struct Cli {
     /// Seed for random number generator.
-    #[arg(long, default_value_t = 0)]
-    seed: u64,
+    #[arg(long)]
+    seed: Option<u64>,
 
     /// Use bad (but cross platform) random number generator
     #[arg(long)]
     badrand: bool,
 
     /// Which boxes to include in the collection.
-    #[arg(long)]
+    #[arg(long, value_delimiter = ',')]
     boxes: Vec<String>,
 
     /// Which groups to include in the collection.
-    #[arg(long)]
+    #[arg(long, value_delimiter = ',')]
     groups: Vec<String>,
 
     /// Filename listing boxes and which groups they contain
@@ -193,8 +185,8 @@ pub struct Cli {
     list: bool,
 
     /// How many landscape cards to include (does not include artefacts etc).
-    #[arg(long, default_value_t = 0)]
-    landscape_count: u8,
+    #[arg(long)]
+    landscape_count: Option<u8>,
 
     /// Explain why cards were added.
     #[arg(long)]
