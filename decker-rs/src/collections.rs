@@ -84,12 +84,10 @@ impl CollectionState {
     }
 
     pub(crate) fn shuffle(&mut self, r: &mut Box<dyn RngCore>) {
-        let us = self.piles.len();
-        // let size: u64 = us.try_into().unwrap_or(10);
         // go through the pile vector 3 times and swap items
         for _ in 0..3 {
-            for j in (1..us).rev() {
-                let pos: usize = (r.gen::<u64>() % (j as u64)).try_into().unwrap_or(10);
+            for j in (1..self.piles.len()).rev() {
+                let pos = r.gen::<usize>() % j;
                 self.piles.swap(pos, j);
             }
         }

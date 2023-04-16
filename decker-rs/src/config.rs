@@ -1,4 +1,3 @@
-use rand::seq::SliceRandom;
 use rand::{Rng, RngCore};
 use std::collections::{BTreeSet, HashMap, HashSet};
 
@@ -15,7 +14,7 @@ use crate::constraints::{
 use crate::piles::PileSet;
 use crate::properties::prelude::*;
 
-use crate::{caps, capu, capus, group_name_prefix, read_boxes, Cli, MANY};
+use crate::{group_name_prefix, read_boxes, Cli, MANY};
 
 pub struct Config {
     pub(crate) rand: Box<dyn RngCore>,
@@ -393,7 +392,7 @@ pub fn load_config(cli: Cli, card_file: String, box_file: String) -> Result<Conf
     // now we set up randomiser
     // The cap here is arbitrary (want it to be at least as big
     // as 3 x pile size for shuffling
-    let mut rand = get_rand_stream(seed, capu(10 * p_set.len()), use_bad_rand);
+    let mut rand = get_rand_stream(seed, (p_set.len() as u64).saturating_mul(10), use_bad_rand);
 
     // Now we limit the groups we can draw from.
     // We'll do it here before anything gets into the
@@ -410,7 +409,7 @@ pub fn load_config(cli: Cli, card_file: String, box_file: String) -> Result<Conf
         for ip in &include_piles {
             chosen_prefixes.insert(group_name_prefix(ip.get_card_group()));
         }
-        if capus(chosen_prefixes.len()) > suggested_max {
+        if chosen_prefixes.len() > (suggested_max as usize) {
             // need to -1 from both numbers because of hidden "base" group
             return Err(format!(
                 "Requested at most {} big groups, but included cards are drawn from {}.",
@@ -423,24 +422,18 @@ pub fn load_config(cli: Cli, card_file: String, box_file: String) -> Result<Conf
             group_prefixes.insert(group_name_prefix(p.get_card_group()));
         }
         // now shuffle the prefixes
-        let mut shuffle_prefixes: Vec<String> = vec![];
-        for s in group_prefixes {
-            shuffle_prefixes.push(s);
-        }
-        let n_sets = caps(shuffle_prefixes.len()) as usize;
+        let mut shuffle_prefixes = Vec::from_iter(group_prefixes);
+        let n_sets = shuffle_prefixes.len();
         // wow, could have named these better
-        for _i in 0..3 {
+        for _ in 0..3 {
             for i in (1..n_sets).rev() {
-                let pos: usize = (rand.gen::<u64>() % (i as u64)) as usize;
-                if i != pos {
-                    shuffle_prefixes.swap(i, pos);
-                }
+                let pos = rand.gen::<usize>() % i;
+                shuffle_prefixes.swap(i, pos);
             }
-            // shuffle_prefixes.shuffle(&mut rand);
         }
         let mut i = 0;
         while i < n_sets && chosen_prefixes.len() < (suggested_max as usize) {
-            chosen_prefixes.insert(shuffle_prefixes[i as usize].to_string());
+            chosen_prefixes.insert(shuffle_prefixes[i].to_string());
             i += 1;
         }
         let mut new_files = PileSet::new();

@@ -3,8 +3,6 @@ use std::io::BufRead;
 use std::io::BufReader;
 use std::path::Path;
 
-use std::convert::TryFrom;
-
 use std::process::exit;
 
 use clap::Parser;
@@ -30,18 +28,6 @@ use config::load_config;
 // A bunch of utility functions that will be removed later
 
 type StringMultiMap = std::collections::BTreeMap<String, Vec<String>>;
-
-fn split_once(s: &str, sep: char) -> Option<(&str, &str)> {
-    for (pos, c) in s.char_indices() {
-        if c == sep {
-            if pos == 0 {
-                return Some((&s[0..0], &s[sep.len_utf8()..]));
-            }
-            return Some((&s[0..pos], &s[pos + sep.len_utf8()..]));
-        }
-    }
-    None
-}
 
 fn short_value(s: &str) -> i8 {
     s.parse::<i8>().unwrap_or(-1)
@@ -94,31 +80,10 @@ fn read_boxes(fname: &String) -> Result<StringMultiMap, String> {
     Ok(res)
 }
 
-fn caps(v: usize) -> i8 {
-    match i8::try_from(v) {
-        Ok(res) => res,
-        Err(_) => i8::MAX - 1,
-    }
-}
-
-fn capus(v: usize) -> u8 {
-    match u8::try_from(v) {
-        Ok(res) => res,
-        Err(_) => u8::MAX - 1,
-    }
-}
-
-fn capu(v: usize) -> u64 {
-    match u64::try_from(v) {
-        Ok(res) => res,
-        Err(_) => u64::MAX - 1,
-    }
-}
-
 fn group_name_prefix(group_name: &str) -> String {
-    match split_once(group_name, '-') {
-        None => group_name.to_string(),
+    match group_name.split_once('-') {
         Some((lhs, _)) => lhs.to_string(),
+        None => group_name.to_string(),
     }
 }
 
