@@ -3,7 +3,8 @@ use std::cell::RefCell;
 use std::collections::{BTreeSet, HashMap, HashSet};
 use std::rc::Rc;
 
-use crate::bad_rand::RandStream;
+use rand::{Rng, RngCore};
+
 use crate::cards::{CardPtr, CardSet};
 use crate::constraints::{ConsResult, ConsResult::*, ConstraintPtr};
 use crate::costs::{Cost, CostSet, CostVotes};
@@ -82,13 +83,13 @@ impl CollectionState {
         }
     }
 
-    pub(crate) fn shuffle(&mut self, r: &mut Box<dyn RandStream>) {
+    pub(crate) fn shuffle(&mut self, r: &mut Box<dyn RngCore>) {
         let us = self.piles.len();
         let size: u64 = us.try_into().unwrap_or(10);
         // go through the pile vector 3 times and swap items
         for _i in 0..3 {
             for j in 0..us {
-                let pos: usize = (r.get() % size).try_into().unwrap_or(10);
+                let pos: usize = (r.gen::<u64>() % size).try_into().unwrap_or(10);
                 self.piles.swap(pos, j);
             }
         }
@@ -109,7 +110,7 @@ impl CardColl {
         landscapes: u8,
         includes: &PileSet,
         cons: &Vec<ConstraintPtr>,
-        rand: &mut Box<dyn RandStream>,
+        rand: &mut Box<dyn RngCore>,
     ) -> Result<SelectionPtr, String> {
         let mut sel = match self.start_selection(market_cap, landscapes) {
             Some(s) => s,
@@ -178,7 +179,7 @@ impl CardColl {
 
     // Cleanup to check for extra elements like vp tokens which
     // don't really need a constraint to catch
-    fn finish_selection(&self, sel: &mut SelectionState, rand: &mut Box<dyn RandStream>) {
+    fn finish_selection(&self, sel: &mut SelectionState, rand: &mut Box<dyn RngCore>) {
         // check to see if we need to add DarkAges-base cards
         // rules say to do it based on randomness eg the last card added
         // but we don't know what order things were drawn
@@ -196,7 +197,7 @@ impl CardColl {
         if da_count > 0 {
             // if the random is less than the number of number of
             // DarkAges cards, add the DarkAges base cards to replace Estate
-            let r = rand.get() % ks_count;
+            let r = rand.gen::<u64>() % ks_count;
             if r < da_count {
                 // need to add all piles from that group
                 let ps = CardGroupProperty::make_ptr("DarkAges-base");

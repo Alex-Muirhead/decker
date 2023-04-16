@@ -1,9 +1,10 @@
+use rand::{Rng, RngCore};
 use std::collections::{BTreeSet, HashMap, HashSet};
 
 use crate::actions::{
     AddGroup, AddMissingDependency, AddMissingDependencyGroup, AddProsperity, FindPile,
 };
-use crate::bad_rand::{get_rand_stream, RandStream};
+use crate::bad_rand::get_rand_stream;
 use crate::cards::load_cards;
 use crate::collections::CardCollectionPtr;
 use crate::constraints::{
@@ -16,7 +17,7 @@ use crate::properties::prelude::*;
 use crate::{caps, capu, capus, group_name_prefix, read_boxes, Cli, MANY};
 
 pub struct Config {
-    pub(crate) rand: Box<dyn RandStream>,
+    pub(crate) rand: Box<dyn RngCore>,
     pub(crate) why: bool,
     pub(crate) more_info: bool,
     pub(crate) optional_extras: u8,
@@ -64,7 +65,7 @@ impl Config {
         let c = Constraint::make_ptr_full(
             "AddProsperityCards".to_string(),
             Some(NeedProsperity::make_ptr(
-                (self.rand.get() % 10).try_into().unwrap(),
+                (self.rand.gen::<u64>() % 10).try_into().unwrap(),
             )),
             &fail_prop,
             Some(AddProsperity::make_ptr(col)),
@@ -429,7 +430,7 @@ pub fn load_config(cli: Cli, card_file: String, box_file: String) -> Result<Conf
         // wow, could have named these better
         for _i in 0..3 {
             for i in 0..(n_sets as usize) {
-                let pos: usize = (rand.get() % (n_sets as u64)) as usize;
+                let pos: usize = (rand.gen::<u64>() % (n_sets as u64)) as usize;
                 if i != pos {
                     shuffle_prefixes.swap(i, pos);
                 }
@@ -451,7 +452,7 @@ pub fn load_config(cli: Cli, card_file: String, box_file: String) -> Result<Conf
 
     // Now let's work out how many optional extras we need
     let opt_extra = cli.landscape_count.unwrap_or_else(|| {
-        let x = (rand.get() % 7) as u8;
+        let x = (rand.gen::<u64>() % 7) as u8;
         if x < 3 {
             x
         } else {
