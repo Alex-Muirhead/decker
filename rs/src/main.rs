@@ -4141,6 +4141,6 @@ fn main() {
             exit(2);
         }
     };
-    print!("Options:{}\n", conf.get_string());
+    // print!("Options:{}\n", conf.get_string());
     sel.dump(conf.why, conf.more_info);
 }

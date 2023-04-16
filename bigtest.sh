@@ -7,9 +7,9 @@ do
     do
         rm -f /tmp/c /tmp/r
         ../cpp/decker --badrand --boxfile=boxes.dat $opt --seed=$seed > /tmp/c &
-        ../rs/decker --badrand --boxfile=boxes.dat $opt --seed=$seed > /tmp/r &
+        ../decker-rs/decker --badrand --boxfile=boxes.dat $opt --seed=$seed > /tmp/r &
         wait
-        diff -q /tmp/c /tmp/r > /dev/null
+        diff -q <(tail +2 /tmp/c) /tmp/r > /dev/null
         if [ $? != 0 ]
         then
             head -1 /tmp/c
@@ -27,9 +27,9 @@ do
   do
         rm -f /tmp/c /tmp/r
         ../cpp/decker --badrand $opt --seed=$seed > /tmp/c &
-        ../rs/decker --badrand $opt --seed=$seed > /tmp/r &
+        ../decker-rs/decker --badrand $opt --seed=$seed > /tmp/r &
         wait
-        diff -q /tmp/c /tmp/r > /dev/null
+        diff -q <(tail +2 /tmp/c) /tmp/r > /dev/null
         if [ $? != 0 ]
         then
             head -1 /tmp/c
@@ -43,8 +43,8 @@ do
     for inc in '' '--no-attack-react' '--no-anti-cursor'
     do
         ../cpp/decker --badrand --min-type=Attack:2 --include=Quest --seed=$seed $inc > /tmp/c;
-        ../rs/decker --badrand --min-type=Attack:2 --include=Quest --seed=$seed $inc > /tmp/r;
-        diff -q /tmp/c /tmp/r > /dev/null
+        ../decker-rs/decker --badrand --min-type=Attack:2 --include=Quest --seed=$seed $inc > /tmp/r;
+        diff -q <(tail +2 /tmp/c) /tmp/r > /dev/null
         if [ $? != 0 ]
         then
             head -1 /tmp/c
@@ -58,8 +58,8 @@ do
 for inc in '' --include=Page --include=Rats,Tournament;
 do
    ../cpp/decker --badrand --seed=$seed $inc > /tmp/c;
-   ../rs/decker --badrand --seed=$seed $inc > /tmp/r;
-   diff /tmp/c /tmp/r
+   ../decker-rs/decker --badrand --seed=$seed $inc > /tmp/r;
+   diff -q <(tail +2 /tmp/c) /tmp/r
    if [ $? != 0 ]
    then
       head -1 /tmp/c
