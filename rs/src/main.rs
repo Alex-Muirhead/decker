@@ -3482,8 +3482,8 @@ fn load_config(args: Vec<String>, card_file: String, box_file: String) -> Result
                     let n_sets = caps(shuffle_prefixes.len());
                     // wow, could have named these better
                     for _i in 0..3 {
-                        for i in 0..(n_sets as usize) {
-                            let pos: usize = (rand.get() % (n_sets as u64)) as usize;
+                        for i in (1..n_sets as usize).rev() {
+                            let pos: usize = (rand.get() % (i as u64)) as usize;
                             if i != pos {
                                 shuffle_prefixes.swap(i, pos);
                             }
@@ -3639,8 +3639,8 @@ impl CollectionState {
         };
         // go through the pile vector 3 times and swap items
         for _i in 0..3 {
-            for j in 0..us {
-                let pos: usize = match (r.get() % size).try_into() {
+            for j in (1..us).rev() {
+                let pos: usize = match (r.get() % (j as u64)).try_into() {
                     Ok(v) => v,
                     Err(_) => 10, // arbitrary result
                 };

@@ -718,9 +718,9 @@ bool Config::loadConfig(int argc, char** argv, Config& conf, std::string& err, c
                 size_t nSets=shufflePrefixes.size();
                 for (int i=0; i<3; ++i)
                 {
-                    for (size_t i=0; i<nSets; ++i)
+                    for (size_t i=nSets-1; i>0; --i)
                     {
-                        size_t pos=conf.rand->get()%nSets;
+                        size_t pos=conf.rand->get()%i;
                         if (i!=pos)
                         {
                             shufflePrefixes[i].swap(shufflePrefixes[pos]);

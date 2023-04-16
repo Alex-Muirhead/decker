@@ -1,3 +1,4 @@
+use rand::seq::SliceRandom;
 use rand::{Rng, RngCore};
 use std::collections::{BTreeSet, HashMap, HashSet};
 
@@ -426,15 +427,16 @@ pub fn load_config(cli: Cli, card_file: String, box_file: String) -> Result<Conf
         for s in group_prefixes {
             shuffle_prefixes.push(s);
         }
-        let n_sets = caps(shuffle_prefixes.len());
+        let n_sets = caps(shuffle_prefixes.len()) as usize;
         // wow, could have named these better
         for _i in 0..3 {
-            for i in 0..(n_sets as usize) {
-                let pos: usize = (rand.gen::<u64>() % (n_sets as u64)) as usize;
+            for i in (1..n_sets).rev() {
+                let pos: usize = (rand.gen::<u64>() % (i as u64)) as usize;
                 if i != pos {
                     shuffle_prefixes.swap(i, pos);
                 }
             }
+            // shuffle_prefixes.shuffle(&mut rand);
         }
         let mut i = 0;
         while i < n_sets && chosen_prefixes.len() < (suggested_max as usize) {

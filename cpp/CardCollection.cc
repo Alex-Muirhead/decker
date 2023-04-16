@@ -53,9 +53,9 @@ void CardCollection::shuffle(RandStream& r)
     // go through the pile vector 3 times and swap items 
     for (int i=0;i<3;++i)
     {
-        for (size_t j=0;j<size;++j)
+        for (size_t j=size-1;j>0;--j)
         {
-            unsigned pos=r.get()%size;
+            unsigned pos=r.get()%j;
             const Pile* temp=piles[pos];
             piles[pos]=piles[j];
             piles[j]=temp;
