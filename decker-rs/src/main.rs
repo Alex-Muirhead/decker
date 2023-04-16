@@ -1,6 +1,3 @@
-use std::collections::HashMap;
-use std::env;
-
 use std::fs::File;
 use std::io::BufRead;
 use std::io::BufReader;
@@ -44,35 +41,6 @@ fn split_once(s: &str, sep: char) -> Option<(&str, &str)> {
         }
     }
     None
-}
-
-fn organise_args(
-    args: &Vec<String>,
-    legal_options: &HashMap<String, String>,
-) -> Result<StringMultiMap, String> {
-    let mut m = StringMultiMap::new();
-    for s in args {
-        let temp: &String = s;
-        match split_once(s, '=') {
-            None => {
-                if !legal_options.contains_key(&temp.to_string()) {
-                    return Result::Err(format!("Unknown option {}", temp));
-                }
-                m.insert(s.clone(), vec!["_".to_string()]);
-            }
-            Some((lhs, rhs)) => {
-                let toks = rhs.split(',');
-                if !legal_options.contains_key(lhs) {
-                    return Err(format!("Unknown option {}", lhs));
-                }
-                let e = m.entry(lhs.to_string()).or_default();
-                for t in toks {
-                    e.push(t.to_string());
-                }
-            }
-        }
-    }
-    Ok(m)
 }
 
 fn short_value(s: &str) -> i8 {
@@ -236,9 +204,7 @@ pub struct Cli {
 fn main() {
     let cli = Cli::parse();
 
-    let mut args: Vec<String> = env::args().collect();
-    args.remove(0);
-    let mut conf = match load_config(args, cli, "cards.dat".to_string(), "".to_string()) {
+    let mut conf = match load_config(cli, "cards.dat".to_string(), "".to_string()) {
         Ok(v) => v,
         Err(e) => {
             println!("{}", e);
@@ -294,6 +260,7 @@ fn main() {
             exit(2);
         }
     };
-    println!("Options:{}", conf.get_string());
+    // TODO: Have to come up with another way to do this, as I'm removing get-string
+    // println!("Options:{}", conf.get_string());
     sel.dump(conf.why, conf.more_info);
 }

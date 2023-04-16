@@ -13,88 +13,9 @@ use crate::constraints::{
 use crate::piles::PileSet;
 use crate::properties::prelude::*;
 
-use crate::{
-    caps, capu, capus, group_name_prefix, organise_args, read_boxes, Cli, StringMultiMap, MANY,
-};
-
-fn get_legal_options() -> HashMap<String, String> {
-    let mut res: HashMap<String, String> = HashMap::new();
-    res.insert(
-        String::from("--seed"),
-        String::from("Seed for random number generator. 0 will use a default value."),
-    );
-    res.insert(
-        String::from("--badrand"),
-        String::from("Use bad (but cross platform) random number generator"),
-    );
-    res.insert(
-        String::from("--boxes"),
-        String::from("Which boxes to include in the collection."),
-    );
-    res.insert(
-        String::from("--groups"),
-        String::from("Which groups to include in the collection."),
-    );
-    res.insert(
-        String::from("--boxfile"),
-        String::from("Filename listing boxes and which groups they contain"),
-    );
-    res.insert(
-        String::from("--cardfile"),
-        String::from("Filename listing all cards."),
-    );
-    res.insert(
-        String::from("--help"),
-        String::from("List command options."),
-    );
-    res.insert(
-        String::from("--list"),
-        String::from("Dump contents of collection and exit."),
-    );
-    res.insert(
-        String::from("--landscape-count"),
-        String::from("How many landscape cards to include (does not include artefacts etc)."),
-    );
-    res.insert(
-        String::from("--why"),
-        String::from("Explain why cards were added."),
-    );
-    res.insert(
-        String::from("--no-validate"),
-        String::from("Do not validate collection."),
-    );
-    res.insert(
-        String::from("--exclude"),
-        String::from("Do not allow any of these cards."),
-    );
-    res.insert(
-        String::from("--include"),
-        String::from("This card must be in the selection."),
-    );
-    res.insert(
-        String::from("--info"),
-        String::from("Show info about selected cards."),
-    );
-    res.insert(
-        String::from("--no-attack-react"),
-        String::from("Disable automatic adding reacts to attacks."),
-    );
-    res.insert(
-        String::from("--no-anti-cursor"),
-        String::from("Disable automatic adding of trash cards if cards give curses."),
-    );
-    res.insert(
-        String::from("--max-cost-repeat"),
-        String::from("Set the maximum number of times a cost can occur."),
-    );
-    res.insert(String::from("--min-type"), String::from("eg --min-type=Treasure:5 means that the selection will can contain at least 5 treasures."));
-    res.insert(String::from("--max-type"), String::from("eg --max-type=Treasure:5 means that the selection will can contain at most 5 treasures."));
-    res.insert(String::from("--max-prefixes"), String::from("Most prefixes (groups and related groups) which can be included. Eg: Cornucopia would also allow Cornucopia-prizes."));
-    res
-}
+use crate::{caps, capu, capus, group_name_prefix, read_boxes, Cli, MANY};
 
 pub struct Config {
-    pub(crate) args: StringMultiMap,
     pub(crate) rand: Box<dyn RandStream>,
     pub(crate) why: bool,
     pub(crate) more_info: bool,
@@ -111,24 +32,6 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn get_string(&self) -> String {
-        let mut res: String = "".to_string();
-        for (k, v) in &self.args {
-            let mut par = "".to_string();
-            let mut first = true;
-            for s in v {
-                par = if first {
-                    first = false;
-                    format!("{}={}", k, s)
-                } else {
-                    format!("{},{}", par, s)
-                }
-            }
-            res = format!("{} {}", res, par);
-        }
-        res
-    }
-
     pub fn build_constraints(
         &mut self,
         col: &CardCollectionPtr,
@@ -369,20 +272,8 @@ impl Config {
 }
 
 // less need to do reference params to get around multiple ret / error ret
-pub fn load_config(
-    args: Vec<String>,
-    cli: Cli,
-    card_file: String,
-    box_file: String,
-) -> Result<Config, String> {
+pub fn load_config(cli: Cli, card_file: String, box_file: String) -> Result<Config, String> {
     let mut err: String = "".to_string();
-    let legal_options = get_legal_options();
-    let mut m = match organise_args(&args, &legal_options) {
-        Err(s) => {
-            return Err(s);
-        }
-        Ok(m) => m,
-    };
 
     let mut exclude_names =
         HashMap::from_iter(cli.exclude.iter().map(|name| (name.clone(), false)));
@@ -490,8 +381,9 @@ pub fn load_config(
     }
 
     let use_bad_rand = cli.badrand;
+    // TODO: Let the seed be picked from the randomiser if not provided
+    // TODO: Find a way to update the CLI for seed value instead of using args
     let seed = cli.seed.unwrap_or(0);
-    let chose_seed = cli.seed.is_some();
     let max_cost_repeat = cli.max_cost_repeat;
     let validate = !cli.no_validate;
     let list_collection = cli.list;
@@ -500,10 +392,6 @@ pub fn load_config(
     // The cap here is arbitrary (want it to be at least as big
     // as 3 x pile size for shuffling
     let mut rand = get_rand_stream(seed, capu(10 * p_set.len()), use_bad_rand);
-    if !chose_seed {
-        let seed = rand.init_seed();
-        m.insert("--seed".to_string(), vec![seed.to_string()]);
-    };
 
     // Now we limit the groups we can draw from.
     // We'll do it here before anything gets into the
@@ -577,7 +465,6 @@ pub fn load_config(
     let disable_attack_react = cli.no_attack_react;
 
     Ok(Config {
-        args: m,
         rand: Box::new(rand),
         why,
         more_info,
