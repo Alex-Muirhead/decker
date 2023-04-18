@@ -8,7 +8,7 @@ use std::path::Path;
 
 use crate::costs::{decode_cost, Cost, Targets};
 use crate::piles::{Pile, PilePtr};
-use crate::{bool_value, no_empty_split, short_value, string_split};
+use crate::{bool_value, no_empty_split, string_split};
 
 // What to do about vectors?
 pub struct Card {
@@ -130,20 +130,11 @@ fn make_card(fields: &Vec<String>) -> Option<Card> {
     if fields.len() < END_COL {
         return None;
     }
-    let coin_cost = short_value(&fields[COINCOST]);
-    let has_coin = coin_cost != -1;
-    let potion_cost = short_value(&fields[POTIONCOST]);
-    let has_potion = potion_cost != -1;
-    let debt_cost = short_value(&fields[DEBTCOST]);
-    let has_debt = debt_cost != -1;
-    let c = Cost::new(
-        coin_cost,
-        has_coin,
-        potion_cost,
-        has_potion,
-        debt_cost,
-        has_debt,
-    );
+    let coin_cost = fields[COINCOST].parse::<i8>().ok();
+    let potion_cost = fields[POTIONCOST].parse::<i8>().ok();
+    let debt_cost = fields[DEBTCOST].parse::<i8>().ok();
+    let c = Cost::new(coin_cost, potion_cost, debt_cost);
+
     let in_supply = bool_value(&fields[SUPPLYCOL]);
     let is_kingdom = bool_value(&fields[KINGDOMCOL]);
 

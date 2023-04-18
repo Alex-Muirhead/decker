@@ -9,9 +9,9 @@ use crate::{short_value, MAXCOINCOST};
 //  and then make callers check if they exist
 #[derive(Hash, Eq, PartialEq, Copy, Clone, Debug)]
 pub struct Cost {
-    coin: i8,
-    potion: i8,
-    debt: i8,
+    coin: Option<i8>,
+    potion: Option<i8>,
+    debt: Option<i8>,
 }
 
 pub type CostSet = HashSet<Cost>;
@@ -19,8 +19,6 @@ pub type CostSet = HashSet<Cost>;
 // The c++ implementation tried to const everything in sight
 //  so default to non-mutable is hopefully less of a problem
 impl Cost {
-    const NOCOST: i8 = -1;
-
     // constructor overloading with no missing param support is not clean
     // Can't have overloaded names, ... but can do macros ...
     //but can't put them in impl or traits
@@ -31,81 +29,51 @@ impl Cost {
 
     pub fn new_s(coin: i8) -> Cost {
         Cost {
-            coin,
-            potion: Cost::NOCOST,
-            debt: Cost::NOCOST,
+            coin: Some(coin),
+            potion: None,
+            debt: None,
         }
     }
 
-    pub fn new(
-        coin: i8,
-        has_coin: bool,
-        potion: i8,
-        has_potion: bool,
-        debt: i8,
-        has_debt: bool,
-    ) -> Cost {
-        Cost {
-            coin: if has_coin { coin } else { Cost::NOCOST },
-            potion: if has_potion { potion } else { Cost::NOCOST },
-            debt: if has_debt { debt } else { Cost::NOCOST },
-        }
-    }
-
-    pub fn valid(&self) -> bool {
-        !((self.coin == Cost::NOCOST)
-            && (self.potion == Cost::NOCOST)
-            && (self.debt == Cost::NOCOST))
+    pub fn new(coin: Option<i8>, potion: Option<i8>, debt: Option<i8>) -> Cost {
+        Cost { coin, potion, debt }
     }
 
     pub(crate) fn get_string(&self) -> String {
         format!(
             "({},{},{})",
-            if self.has_coin() {
-                self.coin.to_string()
-            } else {
-                String::from("")
-            },
-            if self.has_potion() {
-                format!("{}P", self.potion)
-            } else {
-                String::from("")
-            },
-            if self.has_debt() {
-                format!("{}D", self.debt)
-            } else {
-                String::from("")
-            }
+            self.coin.map_or(String::from(""), |c| c.to_string()),
+            self.potion.map_or(String::from(""), |p| format!("{}D", p)),
+            self.debt.map_or(String::from(""), |d| format!("{}D", d))
         )
     }
 
     pub(crate) fn has_debt(&self) -> bool {
-        self.debt != Cost::NOCOST
+        self.debt.is_some()
     }
     fn has_coin(&self) -> bool {
-        self.coin != Cost::NOCOST
+        self.coin.is_some()
     }
     pub(crate) fn has_potion(&self) -> bool {
-        self.potion != Cost::NOCOST
+        self.potion.is_some()
     }
     fn is_coin_only(&self) -> bool {
-        self.potion == Cost::NOCOST && self.debt == Cost::NOCOST
+        self.potion.is_none() && self.debt.is_none()
     }
 
     // if we were really rusting this maybe this should be an Option
-    fn get_coin(&self) -> i8 {
+    fn get_coin(&self) -> Option<i8> {
         self.coin
     }
 
     fn get_rel_cost(&self, delta: i8) -> Cost {
-        let mut new_coin = self.coin + delta;
+        let mut new_coin = self.coin.unwrap_or(-1) + delta;
         if new_coin < 0 {
             new_coin = 0;
         }
         Cost {
-            coin: new_coin,
-            potion: self.potion,
-            debt: self.debt,
+            coin: Some(new_coin),
+            ..*self
         }
     }
 
@@ -114,14 +82,6 @@ impl Cost {
             return true;
         }
         false
-    }
-
-    pub fn dummy() -> Cost {
-        Cost {
-            coin: Cost::NOCOST,
-            potion: Cost::NOCOST,
-            debt: Cost::NOCOST,
-        }
     }
 }
 
@@ -228,18 +188,19 @@ impl CostTarget for CostRelative {
         let weight = self.helper.met_weight as f32 / current_costs.len() as f32;
         if self.cost_delta < 0 {
             for c in current_costs {
-                if !c.has_coin() {
-                    // costs without coin components can't do coin relative costs
-                    continue;
-                }
-                if c.get_coin() < -self.cost_delta
+                let Some(coin) = c.get_coin() else {
+                    continue
+                };
+
                 // don't let cost drop below zero
-                {
+                if coin < -self.cost_delta {
                     continue;
                 }
+
+                // Must produce a valid cost
                 let mut target = c.get_rel_cost(self.cost_delta);
                 if !self.no_less {
-                    while target.get_coin() >= 0 {
+                    while target.get_coin().unwrap() >= 0 {
                         votes.add_vote(&target, weight);
                         target = target.get_rel_cost(-1);
                     }
@@ -251,6 +212,7 @@ impl CostTarget for CostRelative {
                 if !c.has_coin() {
                     continue;
                 }
+                // Must produce a valid cost
                 let mut target = c.get_rel_cost(self.cost_delta);
                 if self.no_less {
                     votes.add_vote(&target, weight + boost);
@@ -260,7 +222,7 @@ impl CostTarget for CostRelative {
                         target = target.get_rel_cost(-1);
                     }
                     let mut i = 0;
-                    while (i < self.cost_delta) && (target.get_coin() > 0) {
+                    while (i < self.cost_delta) && (target.get_coin().unwrap() > 0) {
                         votes.add_vote(&target, weight);
                         target = target.get_rel_cost(-1);
                         i += 1;
@@ -310,7 +272,7 @@ impl CostTarget for CostUpto {
     fn add_votes(&self, current_costs: &CostSet, votes: &mut CostVotes) -> bool {
         let mut match_count = 0;
         for c in current_costs {
-            if c.is_coin_only() && c.get_coin() <= self.limit {
+            if c.is_coin_only() && c.get_coin().unwrap_or(-1) <= self.limit {
                 match_count += 1;
             };
         }

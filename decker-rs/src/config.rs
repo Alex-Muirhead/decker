@@ -297,13 +297,12 @@ pub fn load_config(cli: Cli, card_file: String, box_file: String) -> Result<Conf
 
         // now we start processing the --boxes param
         for bp in cli.boxes.iter() {
-            match box_to_set.get(bp) {
-                None => return Err(format!("Box {} not known in box file {}", bp, box_filename)),
-                Some(e) => {
-                    for name in e {
-                        required_groups.insert(name.to_string(), false);
-                    }
-                }
+            // Can't flatten this into an iterator until we remove early return
+            let set = box_to_set
+                .get(bp)
+                .ok_or(format!("Box {} not known in box file {}", bp, box_filename))?;
+            for name in set {
+                required_groups.insert(name.to_string(), false);
             }
         }
     }

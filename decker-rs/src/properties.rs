@@ -553,7 +553,7 @@ impl Property for RepeatedCostProperty {
 }
 
 pub struct CostProperty {
-    single_cost: Cost,
+    single_cost: Option<Cost>,
     costs: CostSet,
     supply_only: bool,
 }
@@ -562,7 +562,7 @@ impl CostProperty {
     pub(crate) fn make_ptr_set(costs: CostSet, supply_only: bool) -> PropertyPtr {
         PropertyPtr {
             state: Rc::new(CostProperty {
-                single_cost: Cost::dummy(),
+                single_cost: None,
                 costs,
                 supply_only,
             }),
@@ -579,8 +579,8 @@ impl Property for CostProperty {
         if self.supply_only && !p.get_supply() {
             return false;
         }
-        if self.single_cost.valid() {
-            return p.get_costs().contains(&self.single_cost);
+        if let Some(cost) = self.single_cost {
+            return p.get_costs().contains(&cost);
         }
         // we need to find if there is a non-empty intersection
         // between the cost sets. I'm not using std::set_intersection
