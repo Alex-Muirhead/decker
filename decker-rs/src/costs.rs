@@ -389,6 +389,18 @@ impl CostVotes {
     }
 }
 
+// Used
+// ----
+// <= (+/-), relative (0..limit)
+// <=, absolute (0..limit)
+// >=, absolute (limit..)
+// = (+/-), relative iter::once(limit)
+// in, (lower..upper)
+
+// Un-used
+// -------
+// >= (+/-), relative (limit..)
+// =, absolute iter::once(limit)
 pub fn decode_cost(s: &str) -> Option<TargetPtr> {
     let matches_required = 6;
     let unmet_weight = 3;
