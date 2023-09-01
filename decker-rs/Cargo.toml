@@ -1,5 +1,5 @@
 [package]
-name = "decker-rs"
+name = "decker"
 version = "0.1.0"
 edition = "2021"
 
@@ -7,5 +7,7 @@ edition = "2021"
 
 [dependencies]
 clap = { version = "4.2.1", features = ["derive"] }
+csv = "1.2"
 rand = "0.8.5"
 rand_core = "0.6.4"
+serde = { version = "1.0", features = ["derive"] }

@@ -6,7 +6,7 @@ use std::rc::Rc;
 use crate::cards::Cards;
 use crate::collections::{CardCollectionPtr, CollectionIterator};
 use crate::constraints::ConstraintPtr;
-use crate::costs::{CostSet, Targets};
+use crate::costs::{CostSet, CostTarget};
 use crate::piles::{PilePtr, Piles, SortablePile};
 
 pub struct SelectionState {
@@ -22,7 +22,7 @@ pub struct SelectionState {
     // This one needs to be modified after wrapping
     target_check_required: RefCell<bool>,
     target_blame: RefCell<String>, // piles responsible for cost target
-    targets: Targets,
+    targets: Vec<Box<dyn CostTarget>>,
     interacts_keywords: BTreeMap<String, u64>,
     keywords: BTreeMap<String, u64>,
     card_coll: CardCollectionPtr,
@@ -158,7 +158,7 @@ impl SelectionState {
             need_items: RefCell::new(BTreeSet::new()), // <= required_cards
             costs_in_supply: CostSet::new(),
             target_check_required: RefCell::new(false),
-            targets: Targets::new(),
+            targets: Vec::new(),
             target_blame: RefCell::new("".to_string()), // piles responsible for cost target
 
             interacts_keywords: BTreeMap::new(),
@@ -346,7 +346,7 @@ impl SelectionPtr {
         self.state.set_need_to_check(v, s);
     }
 
-    pub(crate) fn get_target_set(&self) -> &Targets {
+    pub(crate) fn get_target_set(&self) -> &Vec<Box<dyn CostTarget>> {
         &self.state.targets
     }
 

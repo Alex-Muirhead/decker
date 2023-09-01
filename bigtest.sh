@@ -14,6 +14,7 @@ do
         then
             head -1 /tmp/c
         fi
+        # exit 0
     done
 
 done
@@ -21,7 +22,7 @@ done
 
 
 echo "Starting batch 1"
-for seed in {5555..6555}
+for seed in {5555..5755}
 do
   for opt in '' --min-type=Treasure:5 --max-type=Treasure:3 --max-cost-repeat=3 --max-cost-repeat=4 --max-prefixes=3 --landscape-count=3 --landscape-count=4 --exclude=Colony
   do
@@ -53,7 +54,7 @@ do
 done
 
 echo "Starting batch 3"
-for seed in {1..1218}
+for seed in {1..218}
 do
 for inc in '' --include=Page --include=Rats,Tournament;
 do

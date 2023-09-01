@@ -6,11 +6,14 @@ use std::hash::{Hash, Hasher};
 use std::io::{BufRead, BufReader};
 use std::path::Path;
 
-use crate::costs::{decode_cost, Cost, Targets};
+use serde::Deserialize;
+
+use crate::costs::{decode_cost, Cost, CostTarget};
 use crate::piles::{Pile, PilePtr};
 use crate::{bool_value, no_empty_split, string_split};
 
 // What to do about vectors?
+#[derive(Debug)]
 pub struct Card {
     name: String,
     pile: String,
@@ -22,7 +25,7 @@ pub struct Card {
     keywords: Vec<String>,
     kw_interactions: Vec<String>,
     other_interactions: Vec<String>,
-    cost_targets: Targets,
+    pub cost_targets: Vec<Box<dyn CostTarget>>,
 }
 
 pub type CardPtr = Rc<Card>;
@@ -43,7 +46,7 @@ impl Card {
         card_keywords: Vec<String>,
         interacts_keywords: Vec<String>,
         interacts_other: Vec<String>,
-        targets: Targets,
+        targets: Vec<Box<dyn CostTarget>>,
     ) -> Card {
         Card {
             name: String::from(card_name),
@@ -89,9 +92,6 @@ impl Card {
     pub fn get_other_interactions(&self) -> &[String] {
         &self.other_interactions
     }
-    pub fn get_cost_targets(&self) -> &Targets {
-        &self.cost_targets
-    }
 }
 
 impl PartialEq for Card {
@@ -110,6 +110,21 @@ impl Hash for Card {
 
 // typedef not declared like variables
 pub type CardSet = HashSet<CardPtr>;
+
+// #[derive(Debug, Deserialize)]
+// pub struct CSVCard {
+//     name: String,
+//     pile: String,
+//     card_group: String,
+//     supply: bool,
+//     kingdom: bool,
+//     types: Vec<String>,
+//     cost: Cost,
+//     keywords: Vec<String>,
+//     kw_interactions: Vec<String>,
+//     other_interactions: Vec<String>,
+//     cost_targets: Targets,
+// }
 
 fn make_card(fields: &Vec<String>) -> Option<Card> {
     const NAMECOL: usize = 0;
@@ -142,7 +157,7 @@ fn make_card(fields: &Vec<String>) -> Option<Card> {
     let keywords = no_empty_split(&fields[KEYWORDSCOL], ';');
     let interacts_kw = no_empty_split(&fields[INTERACTKEY], ';');
     let interacts_other = no_empty_split(&fields[INTERACTOTHER], ';');
-    let mut targets: Targets = vec![];
+    let mut targets: Vec<Box<dyn CostTarget>> = vec![];
 
     // Recognise cost constraints and check
     for s in &interacts_other {

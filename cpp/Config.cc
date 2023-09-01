@@ -718,8 +718,10 @@ bool Config::loadConfig(int argc, char** argv, Config& conf, std::string& err, c
                 size_t nSets=shufflePrefixes.size();
                 for (int i=0; i<3; ++i)
                 {
+                    // for (size_t i=0; i<nSets; ++i)
                     for (size_t i=nSets-1; i>0; --i)
                     {
+                        // size_t pos=conf.rand->get()%nSets;
                         size_t pos=conf.rand->get()%i;
                         if (i!=pos)
                         {
@@ -784,6 +786,19 @@ bool Config::loadConfig(int argc, char** argv, Config& conf, std::string& err, c
     conf.options=conf.getString();
     conf.disableAntiCursors=conf.args.find("--no-anti-cursor")!=conf.args.end();
     conf.disableAttackReact=conf.args.find("--no-attack-react")!=conf.args.end();
+        
+    // cout << "Optional Extra: " << conf.optionalExtras << endl;
+    // cout << "Validate: " << conf.validate << endl;
+    // cout << "List Collection: " << conf.listCollection << endl;
+    // cout << "Disable anti cursors: " << conf.disableAntiCursors << endl;
+    // cout << "Disable attack react: " << conf.disableAttackReact << endl;
+    // cout << "Max cost repeat: " << conf.maxCostRepeat << endl;
+    // cout << "Min types: " << endl;
+    // for(const auto& elem : conf.minTypes) {
+    //    cout << "    " << elem.first << " -> " << elem.second << endl;
+    // }
+    // // cout << "List Collection: " << conf.listCollection << endl;
+        
     if (!err.empty())
     {
         return false;

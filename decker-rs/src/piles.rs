@@ -6,8 +6,9 @@ use std::hash::{Hash, Hasher};
 use std::rc::Rc;
 
 use crate::cards::{Card, Cards};
-use crate::costs::{CostSet, TargetPtr, Targets};
+use crate::costs::{CostSet, CostTarget};
 
+#[derive(Debug)]
 pub struct Pile {
     name: String,
     card_group: String,
@@ -19,7 +20,7 @@ pub struct Pile {
     kw_interactions: HashSet<String>,
     other_interactions: HashSet<String>,
     cards: Cards,
-    targets: Targets,
+    targets: Vec<Box<dyn CostTarget>>,
 }
 
 pub type PilePtr = Rc<Pile>;
@@ -63,11 +64,11 @@ impl Pile {
             kw_interactions: HashSet::new(),
             other_interactions: HashSet::new(),
             cards: Cards::new(),
-            targets: Targets::new(),
+            targets: Vec::new(),
         }
     }
 
-    fn add_cost_target(&mut self, new_target: &TargetPtr) {
+    fn add_cost_target(&mut self, new_target: &Box<dyn CostTarget>) {
         for t in &self.targets {
             if t.str_rep() == new_target.str_rep() {
                 return;
@@ -103,7 +104,7 @@ impl Pile {
         self.card_group = c.get_card_group().to_string();
         self.supply = c.get_supply() || self.supply;
         self.kingdom = c.get_kingdom() || self.kingdom;
-        for t in c.get_cost_targets() {
+        for t in &c.cost_targets {
             self.add_cost_target(t);
         }
         self.cards.push(Rc::new(c));
@@ -141,7 +142,7 @@ impl Pile {
     pub fn get_cards(&self) -> &Cards {
         &self.cards
     }
-    pub(crate) fn get_targets(&self) -> &Targets {
+    pub(crate) fn get_targets(&self) -> &Vec<Box<dyn CostTarget>> {
         &self.targets
     }
 }
@@ -149,7 +150,7 @@ impl Pile {
 pub type PileSet = BTreeSet<PilePtr>;
 pub type Piles = Vec<PilePtr>;
 
-#[derive(Ord, Eq)]
+#[derive(Eq)]
 pub struct SortablePile {
     pub(crate) p: PilePtr,
 }
@@ -162,25 +163,31 @@ impl PartialEq for SortablePile {
     }
 }
 
-impl PartialOrd for SortablePile {
-    fn partial_cmp(&self, other: &SortablePile) -> Option<Ordering> {
+impl Ord for SortablePile {
+    fn cmp(&self, other: &SortablePile) -> Ordering {
         let mine = self.p.get_card_group();
         let theirs = other.p.get_card_group();
         if mine < theirs {
-            return Some(Less);
+            return Less;
         }
         if mine > theirs {
-            return Some(Greater);
+            return Greater;
         }
         // card groups are equal
         let mine = self.p.get_name();
         let theirs = other.p.get_name();
         if mine < theirs {
-            return Some(Less);
+            return Less;
         }
         if mine > theirs {
-            return Some(Greater);
+            return Greater;
         }
-        Some(Equal)
+        Equal
+    }
+}
+
+impl PartialOrd for SortablePile {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
     }
 }

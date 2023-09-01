@@ -1,13 +1,15 @@
 use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
 
+use serde::Deserialize;
+
 use crate::{short_value, MAXCOINCOST};
 
 // Could have possibly used a tuple struct but
 // I don't want people to need to know meaning of indices
 // Could possibly have made each of these Option<>
 //  and then make callers check if they exist
-#[derive(Hash, Eq, PartialEq, Copy, Clone, Debug)]
+#[derive(Hash, Eq, PartialEq, Copy, Clone, Debug, Deserialize)]
 pub struct Cost {
     coin: Option<i8>,
     potion: Option<i8>,
@@ -99,7 +101,7 @@ impl Cost {
 //
 //  For now I'll try to drop the equality operator
 //    and see what goes wrong
-pub trait CostTarget {
+pub trait CostTarget: std::fmt::Debug {
     // Do I need to return an object back?
     fn add_votes(&self, current_costs: &CostSet, votes: &mut CostVotes) -> bool;
     fn str_rep(&self) -> &String;
@@ -134,9 +136,7 @@ pub trait CostTarget {
 // _difficult_.      I've decided to just make a vector and do duplicate removal
 //  manually.
 
-pub type TargetPtr = Rc<dyn CostTarget>;
-pub type Targets = Vec<TargetPtr>;
-
+#[derive(Debug)]
 struct CostTargetHelper {
     matches_required: i16,
     unmet_weight: i16,
@@ -158,6 +158,7 @@ impl CostTargetHelper {
     }
 }
 
+#[derive(Debug)]
 struct CostRelative {
     helper: CostTargetHelper,
     cost_delta: i8,
@@ -188,9 +189,7 @@ impl CostTarget for CostRelative {
         let weight = self.helper.met_weight as f32 / current_costs.len() as f32;
         if self.cost_delta < 0 {
             for c in current_costs {
-                let Some(coin) = c.get_coin() else {
-                    continue
-                };
+                let Some(coin) = c.get_coin() else { continue };
 
                 // don't let cost drop below zero
                 if coin < -self.cost_delta {
@@ -199,11 +198,15 @@ impl CostTarget for CostRelative {
 
                 // Must produce a valid cost
                 let mut target = c.get_rel_cost(self.cost_delta);
+                // FIXME: Doesn't add anything if self.no_less is `true`
                 if !self.no_less {
-                    while target.get_coin().unwrap() >= 0 {
+                    // NOTE: This was a bug! `target.get_rel_cost(-1)` will always produce a cost >= 0
+                    // Costs in range (0..(coin-delta))
+                    while target.get_coin().unwrap() > 0 {
                         votes.add_vote(&target, weight);
                         target = target.get_rel_cost(-1);
                     }
+                    votes.add_vote(&target, weight);
                 }
             }
         } else {
@@ -217,16 +220,21 @@ impl CostTarget for CostRelative {
                 if self.no_less {
                     votes.add_vote(&target, weight + boost);
                 } else {
+                    // Add delta costs above
+                    // Costs in range (coin..(coin+delta))
                     while target != *c {
                         votes.add_vote(&target, weight + boost);
                         target = target.get_rel_cost(-1);
                     }
+                    // Add max of delta costs below, but keep coin positive
                     let mut i = 0;
+                    // Costs in range (coin..max(0,coin-delta))
                     while (i < self.cost_delta) && (target.get_coin().unwrap() > 0) {
                         votes.add_vote(&target, weight);
                         target = target.get_rel_cost(-1);
                         i += 1;
                     }
+                    // Using `get_rel_cost` can't give a cost less than zero
                     votes.add_vote(&target, weight);
                 }
             }
@@ -250,6 +258,7 @@ impl CostRelative {
     }
 }
 
+#[derive(Debug)]
 struct CostUpto {
     helper: CostTargetHelper,
     limit: i8,
@@ -269,6 +278,11 @@ impl CostTarget for CostUpto {
         &self.helper.cache_string
     }
 
+    // 1. Count how many "costs" match the criteria
+    // 2. Did we find enough "costs"?
+    // 3. Choose the weight based on if we found enough costs
+    // 4. Spread weight uniformly across "limit" number of new costs
+    // 5. Return whether we found enough costs or not
     fn add_votes(&self, current_costs: &CostSet, votes: &mut CostVotes) -> bool {
         let mut match_count = 0;
         for c in current_costs {
@@ -276,11 +290,12 @@ impl CostTarget for CostUpto {
                 match_count += 1;
             };
         }
-        let weight = if match_count >= self.helper.matches_required {
-            (self.helper.met_weight as f32) / (self.limit as f32)
+        let weight = (if match_count >= self.helper.matches_required {
+            self.helper.met_weight
         } else {
-            (self.helper.unmet_weight as f32) / (self.limit as f32)
-        };
+            self.helper.unmet_weight
+        } as f32)
+            / (self.limit as f32);
         for i in 1..=self.limit {
             votes.add_vote(&Cost::new_s(i), weight);
         }
@@ -288,6 +303,7 @@ impl CostTarget for CostUpto {
     }
 }
 
+#[derive(Debug)]
 struct CostInSet {
     helper: CostTargetHelper,
     costs: CostSet,
@@ -350,7 +366,7 @@ impl CostTarget for CostInSet {
 //           - tie lifetime of the CostTarget to the card
 //             Costs are already immutable so concurrent changes are not a problem
 pub struct CostVotes {
-    available_costs: CostSet,
+    available_costs: HashSet<Cost>,
     votes: std::collections::HashMap<Cost, f32>,
 }
 
@@ -401,72 +417,129 @@ impl CostVotes {
 // -------
 // >= (+/-), relative (limit..)
 // =, absolute iter::once(limit)
-pub fn decode_cost(s: &str) -> Option<TargetPtr> {
+enum Comparison {
+    LessThan(i8),
+    GreaterThan(i8),
+    EqualTo(i8),
+}
+
+pub fn decode_cost(s: &str) -> Option<Box<dyn CostTarget>> {
     let matches_required = 6;
     let unmet_weight = 3;
     let met_weight = 1;
     let upto_matches = 3;
     let cost_bound = 30;
-    if let Some(stripped) = s.strip_prefix("cost<=+") {
+
+    // If it doesn't start with cost, we're in trouble!
+    let s = s.strip_prefix("cost")?;
+
+    // Can combine +/- using i32::from_str_radix
+    // Handle `cost_in` range first
+    if let Some(range) = s.strip_prefix("_in") {
+        // If we are missing brackets, return None and fail early!
+        let range = range.strip_prefix('(')?.strip_suffix(')')?;
+        let (lower, upper) = range.split_once('.')?;
+        // Parse both upper and lower, requires positive except accepts i8?
+        let lower: i8 = lower.parse::<u8>().ok()? as i8;
+        let upper: i8 = upper.parse::<u8>().ok()? as i8;
+        let cs = CostSet::from_iter((lower..=upper).map(Cost::new_s));
+        // Create final struct
+        return Some(Box::new(CostInSet::new(
+            upto_matches,
+            unmet_weight,
+            met_weight,
+            cs,
+        )));
+    }
+
+    let (comp, str_val) = s.split_once('=')?;
+    let relative = str_val.starts_with(['+', '-']);
+    let val: i8 = str_val.parse().ok()?;
+
+    if val.abs() > cost_bound || val == 0 {
+        return None;
+    }
+
+    let comp = match comp {
+        "<" => Comparison::LessThan(val),
+        ">" => Comparison::GreaterThan(val),
+        "" => Comparison::EqualTo(val),
+        _ => return None,
+    };
+
+    let coin_cost = 10;
+    let limit = if relative { coin_cost + val } else { val };
+    let (upper, lower) = match comp {
+        Comparison::LessThan(_) => (0, limit),
+        Comparison::GreaterThan(_) => (limit, MAXCOINCOST),
+        Comparison::EqualTo(_) => (limit, limit),
+    };
+
+    for val in lower..=upper {
+        Cost::new_s(val);
+    }
+
+    if let Some(stripped) = s.strip_prefix("<=+") {
         let value = short_value(stripped);
         if value <= 0 || value > cost_bound {
             return None;
         }
-        return Some(Rc::new(CostRelative::new(
+        return Some(Box::new(CostRelative::new(
             matches_required,
             unmet_weight,
             met_weight,
             value,
             false,
         )));
-    } else if let Some(stripped) = s.strip_prefix("cost<=-") {
+    } else if let Some(stripped) = s.strip_prefix("<=-") {
+        // FIXME: This case doesn't exist and is incorrect! Should use '-value'
         let value = short_value(stripped);
         if value <= 0 || value > cost_bound {
             return None;
         }
-        return Some(Rc::new(CostRelative::new(
+        return Some(Box::new(CostRelative::new(
             matches_required,
             unmet_weight,
             met_weight,
             value,
             false,
         )));
-    } else if let Some(stripped) = s.strip_prefix("cost<=") {
+    } else if let Some(stripped) = s.strip_prefix("<=") {
         let value = short_value(stripped);
         if value <= 0 || value > cost_bound {
             return None;
         }
-        return Some(Rc::new(CostUpto::new(
+        return Some(Box::new(CostUpto::new(
             upto_matches,
             unmet_weight,
             met_weight,
             value,
         )));
-    } else if let Some(stripped) = s.strip_prefix("cost=+") {
+    } else if let Some(stripped) = s.strip_prefix("=+") {
         let value = short_value(stripped);
         if value <= 0 || value > cost_bound {
             return None;
         }
-        return Some(Rc::new(CostRelative::new(
+        return Some(Box::new(CostRelative::new(
             matches_required,
             unmet_weight,
             met_weight,
             value,
             true,
         )));
-    } else if let Some(stripped) = s.strip_prefix("cost=-") {
+    } else if let Some(stripped) = s.strip_prefix("=-") {
         let value = short_value(stripped);
         if value <= 0 || value > cost_bound {
             return None;
         }
-        return Some(Rc::new(CostRelative::new(
+        return Some(Box::new(CostRelative::new(
             matches_required,
             unmet_weight,
             met_weight,
             -value,
             true,
         )));
-    } else if let Some(stripped) = s.strip_prefix("cost>=") {
+    } else if let Some(stripped) = s.strip_prefix(">=") {
         let value = short_value(stripped);
         if value <= 0 || value > cost_bound {
             return None;
@@ -475,29 +548,7 @@ pub fn decode_cost(s: &str) -> Option<TargetPtr> {
         for v in value..=MAXCOINCOST {
             cs.insert(Cost::new_s(v));
         }
-        return Some(Rc::new(CostInSet::new(
-            upto_matches,
-            unmet_weight,
-            met_weight,
-            cs,
-        )));
-    } else if s.starts_with("cost_in(") {
-        let sep = match s.find('.') {
-            None => {
-                return None;
-            }
-            Some(v) => v,
-        };
-        let lower = short_value(&s["cost_in(".len()..sep]);
-        let upper = short_value(&s[sep + ".".len()..s.len() - ")".len()]);
-        if (lower <= 0) || (upper <= 0) {
-            return None;
-        }
-        let mut cs = CostSet::new();
-        for v in lower..=upper {
-            cs.insert(Cost::new_s(v));
-        }
-        return Some(Rc::new(CostInSet::new(
+        return Some(Box::new(CostInSet::new(
             upto_matches,
             unmet_weight,
             met_weight,

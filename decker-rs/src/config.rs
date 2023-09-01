@@ -459,6 +459,17 @@ pub fn load_config(cli: Cli, card_file: String, box_file: String) -> Result<Conf
     let disable_anti_cursors = cli.no_anti_cursor;
     let disable_attack_react = cli.no_attack_react;
 
+    // println!("Optional Extra: {opt_extra:?}");
+    // println!("Validate: {validate:?}");
+    // println!("List Collection: {list_collection:?}");
+    // println!("Disable anti cursors: {disable_anti_cursors:?}");
+    // println!("Disable attack react: {disable_attack_react:?}");
+    // println!("Max cost repeat: {max_cost_repeat:?}");
+    // println!("Min types: {min_types:?}");
+    // println!("Max types: {max_types:?}");
+    // println!("Piles: {p_set:?}");
+    // println!("Includes: {include_piles:?}");
+
     Ok(Config {
         rand: Box::new(rand),
         why,
